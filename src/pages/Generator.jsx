@@ -12,6 +12,7 @@ import {
   Sun, 
   Copy, 
   Trash2, 
+  Settings, 
   Image as ImageIcon, 
   Type, 
   Palette,
@@ -20,33 +21,50 @@ import {
   Heart,
   Award,
   Church,
+  Calendar,
+  User,
+  CheckCircle2,
+  Layout,
+  Maximize2,
+  AlignJustify,
+  Cpu,
+  UserCheck,
+  Plus,
+  Users,
   ChevronRight,
   RefreshCw,
+  Edit3,
+  Check,
   X,
+  Zap,
+  Activity,
   Share2,
   MapPin,
+  Flame,
+  ArrowRight,
   Gem,
   ChevronDown,
-  Menu,
   LogOut,
-  Layout,
-  CheckCircle2,
-  Zap,
-  Calendar,
-  Clock,
-  Navigation,
-  Link as LinkIcon
+  Menu
 } from "lucide-react";
 
-export default function Generator() {
+const palettes = [
+  { name: "Tech Corporate", primary: "#0052CC", secondary: "#F4F5F7" },
+  { name: "Luxury Gold", primary: "#D4AF37", secondary: "#000000" },
+  { name: "Eco Nature", primary: "#2D5A27", secondary: "#F0F4EF" },
+  { name: "Royal Premium", primary: "#6C3483", secondary: "#F4ECF7" },
+  { name: "Vibrant Festive", primary: "#FF5733", secondary: "#FFC300" },
+  { name: "Minimalist Slate", primary: "#334155", secondary: "#F8FAFC" },
+];
+
+export default function FlyerPromptGenerator() {
   const [tab, setTab] = useState("chat");
   const [isDarkMode, setIsDarkMode] = useState(true);
-  const [globalMode, setGlobalMode] = useState("Pro");
+  const [globalMode, setGlobalMode] = useState("Simple");
   const [chatInput, setChatInput] = useState("");
   const [isParsing, setIsParsing] = useState(false);
   const [hasOptimized, setHasOptimized] = useState(false);
   const [isPromptGenerated, setIsPromptGenerated] = useState(false);
-  const [generatedPrompt, setGeneratedPrompt] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isAutoSaving, setIsAutoSaving] = useState(false);
 
@@ -87,6 +105,18 @@ export default function Generator() {
 
   // Load Progress on Mount
   useEffect(() => {
+    // 1. Fetch Latest Global Config from Neon
+    fetch('/api/config')
+      .then(res => res.json())
+      .then(data => {
+        if (Object.keys(data).length > 0) {
+          localStorage.setItem("grafigen_config", JSON.stringify(data));
+          console.log("Global config synced from Neon");
+        }
+      })
+      .catch(err => console.error("Neon Sync Error:", err));
+
+    // 2. Load Local User Progress
     const savedProgress = localStorage.getItem("grafigen_user_progress");
     if (savedProgress) {
       try {
@@ -109,32 +139,56 @@ export default function Generator() {
       setTimeout(() => setIsAutoSaving(false), 800);
     };
 
-    const timer = setTimeout(saveProgress, 500); 
+    const timer = setTimeout(saveProgress, 500); // Debounce save
     return () => clearTimeout(timer);
   }, [form, isDarkMode, globalMode]);
 
-  const eventConfigs = {
-    Birthday: { icon: <Gift className="w-4 h-4" />, label: "BIRTHDAY" },
-    Wedding: { icon: <Gem className="w-4 h-4" />, label: "WEDDING" },
-    Anniversary: { icon: <Heart className="w-4 h-4" />, label: "ANNIVERSARY" },
-    Dedication: { icon: <Church className="w-4 h-4" />, label: "DEDICATION" },
-    Award: { icon: <Award className="w-4 h-4" />, label: "AWARD" }
+  // Context-aware labels based on event type
+  const nameLabels = {
+    Birthday: { name: "Celebrant's Name", title: "Main Headline" },
+    Wedding: { name: "Couple Names", title: "Main Headline", bride: "Bride's Name", groom: "Groom's Name" },
+    Anniversary: { name: "Family / Couple Name", title: "Main Headline" },
+    Dedication: { name: "Baby's Name", title: "Dedication Title" },
+    Award: { name: "Recipient's Name", title: "Award Title" }
   };
 
-  const handleChange = (key, val) => {
-    setForm(prev => ({ ...prev, [key]: val }));
+  const eventConfigs = {
+    Birthday: { icon: <Gift className="w-4 h-4" />, presets: ["Family", "Spouse", "Children"] },
+    Wedding: { icon: <Gem className="w-4 h-4" />, presets: ["Spouse", "Family"] },
+    Anniversary: { icon: <Heart className="w-4 h-4" />, presets: ["Spouse"] },
+    Dedication: { icon: <Church className="w-4 h-4" />, presets: ["Family"] },
+    Award: { icon: <Award className="w-4 h-4" />, presets: [] }
+  };
+
+  const t = {
+    bg: isDarkMode ? "bg-[#0f172a]" : "bg-slate-50",
+    text: isDarkMode ? "text-slate-100" : "text-slate-900",
+    textMuted: "text-slate-500",
+    card: isDarkMode ? "bg-slate-800/30 border-slate-700/50 shadow-2xl backdrop-blur-2xl" : "bg-white border-slate-200 shadow-xl",
+    input: isDarkMode ? "bg-slate-950/50 border-slate-700/50 text-white focus:ring-indigo-500/50" : "bg-white border-slate-300 text-slate-800 focus:ring-indigo-500/20",
+    buttonPrimary: "bg-indigo-600 hover:bg-indigo-500 text-white font-bold tracking-widest transition-all rounded-xl h-12 md:h-14 px-8",
+    headerIcon: "p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-sm",
+    label: "text-[9px] md:text-[10px] uppercase tracking-[0.1em] text-slate-500 font-bold"
+  };
+
+  const currentPresets = eventConfigs[form.eventType]?.presets || [];
+
+  const handleChange = (key, value) => {
     setIsPromptGenerated(false);
+    setForm(prev => ({ ...prev, [key]: value }));
   };
 
   const handleImageUpload = (targetKey, subjectName = null) => {
-    const config = JSON.parse(localStorage.getItem("grafigen_config") || "{}");
-    const cloudName = config.cloudinaryCloudName || import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-    const uploadPreset = config.cloudinaryUploadPreset || import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
-
-    if (!cloudName || !uploadPreset) {
-      alert("Cloudinary not configured. Check Admin Settings.");
+    if (!window.cloudinary) {
+      alert("Cloudinary script not loaded. Please check your connection.");
       return;
     }
+
+    // Load dynamic config from Settings (localStorage) or fallback to env
+    const savedConfig = JSON.parse(localStorage.getItem("grafigen_config") || "{}");
+    const cloudName = savedConfig.cloudName || import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "daou85ugm";
+    const uploadPreset = savedConfig.uploadPreset || import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "ml_default";
+    console.log("Initializing Cloudinary Widget with:", { cloudName, uploadPreset });
 
     const widget = window.cloudinary.createUploadWidget(
       {
@@ -142,21 +196,31 @@ export default function Generator() {
         uploadPreset: uploadPreset,
         multiple: false,
         maxFiles: 1,
+        clientAllowedFormats: ["jpg", "png", "jpeg", "webp"],
         styles: {
           palette: {
-            window: "#09090B",
-            windowBorder: "#27272A",
+            window: "#0F172A",
+            windowBorder: "#1E293B",
             tabIcon: "#6366F1",
+            menuIcons: "#94A3B8",
             textDark: "#000000",
             textLight: "#FFFFFF",
             link: "#6366F1",
             action: "#6366F1",
             inactiveTabIcon: "#475569",
-            sourceBg: "#09090B"
+            error: "#F43F5E",
+            inProgress: "#6366F1",
+            complete: "#22C55E",
+            sourceBg: "#0F172A"
           }
         }
       },
       (error, result) => {
+        if (error) {
+          console.error("Cloudinary Widget Error:", error);
+          alert("Upload failed: " + (error.message || "Unknown error"));
+          return;
+        }
         if (result && result.event === "success") {
           const url = result.info.secure_url;
           if (subjectName) {
@@ -173,7 +237,39 @@ export default function Generator() {
     widget.open();
   };
 
+  const handleSubjectToggle = (subject) => {
+    setIsPromptGenerated(false);
+    setForm(prev => {
+      const current = prev.secondarySubjects || [];
+      const isIncluded = current.includes(subject);
+      const next = isIncluded ? current.filter(s => s !== subject) : [...current, subject];
+      
+      // Clean up URL if removed
+      const nextUrls = { ...prev.subjectUrls };
+      if (isIncluded) delete nextUrls[subject];
+      
+      return { ...prev, secondarySubjects: next, subjectUrls: nextUrls };
+    });
+  };
+
+  const handleAIParse = () => {
+    setIsParsing(true);
+    setTimeout(() => {
+      const input = chatInput.toLowerCase();
+      const newForm = { ...form };
+      if (input.includes("birthday")) newForm.eventType = "Birthday";
+      else if (input.includes("wedding")) newForm.eventType = "Wedding";
+      const names = chatInput.match(/[A-Z][a-z]+/g) || [];
+      if (names.length > 0) newForm.primaryName = names[0];
+      setForm(newForm);
+      setIsParsing(false);
+      setHasOptimized(true);
+      setIsPromptGenerated(false);
+    }, 1500);
+  };
+
   const generatePrompt = () => {
+    // 1. Image References (Conditioning)
     let conditioningSection = "";
     if (form.primaryPortraitUrl) {
       conditioningSection += `PRIMARY REFERENCE IMAGE (Facial Identity):\n${form.primaryPortraitUrl}\n\n`;
@@ -182,6 +278,14 @@ export default function Generator() {
       conditioningSection += `STYLE/ACTION REFERENCE (Composition):\n${form.lifestyleActionUrl}\n\n`;
     }
 
+    const moodMap = {
+      Birthday: "Vibrant, joyful, luxurious, and uplifting.",
+      Wedding: "Romantic, pure, sophisticated, and timeless.",
+      Anniversary: "Warm, grateful, classy, and intimate.",
+      Dedication: "Spiritual, ethereal, inspirational, and calm.",
+      Award: "Powerful, prestigious, clean, and professional."
+    };
+
     const lightingMap = {
       "Modern Premium": "Cinematic soft glow, studio backlighting, atmospheric depth.",
       "Minimalist": "Soft diffused natural light, clean shadows, high-key lighting.",
@@ -189,397 +293,479 @@ export default function Generator() {
       "Classic": "Warm golden hour glow, soft vignettes, classic Rembrandt lighting."
     };
 
-    let subjectDesc = `Create a high-end cinematic ${form.cardType.toLowerCase()} poster using the PRIMARY REFERENCE as the exact facial identity reference for ${form.primaryName || "the main subject"}.`;
-    subjectDesc += `\n\nPreserve the exact face, skin tone, hairstyle, and likeness from the identity reference. Do not redesign or alter the facial structure.`;
+    // 2. Main Subject Description
+    let subjectDesc = "";
+    if (form.eventType === "Wedding" && form.separateNames) {
+      subjectDesc = `Create a high-end cinematic ${form.cardType.toLowerCase()} poster using the PRIMARY REFERENCE as the exact facial identity for the couple (${form.brideName} and ${form.groomName}).`;
+    } else {
+      subjectDesc = `Create a high-end cinematic ${form.cardType.toLowerCase()} poster using the PRIMARY REFERENCE as the exact facial identity reference for ${form.primaryName || "the main subject"}.`;
+    }
+    
+    subjectDesc += `\n\nPreserve the exact face, skin tone, hairstyle, and likeness from the identity reference. Do not redesign or alter the facial structure. Maintain likeness accuracy.`;
 
-    const masterPrompt = `${conditioningSection}PROMPT:\n${subjectDesc}\n\nTheme: ${form.title.toUpperCase()}\n\nLighting: ${lightingMap[form.theme] || lightingMap["Modern Premium"]}\n\nMood: Vibrant, luxurious, and professional.`.trim();
-    setGeneratedPrompt(masterPrompt);
-    setIsPromptGenerated(true);
+    if (form.showCelebrantSecondary && form.lifestyleActionUrl) {
+      subjectDesc += `\n\nUse the STYLE/ACTION REFERENCE only for composition inspiration and lifestyle action posing.`;
+    }
+
+    const secondaryList = [...(form.secondarySubjects || []), form.customSecondary].filter(Boolean).join(", ");
+    if (secondaryList) {
+      subjectDesc += `\n\nSecondary style elements: ${secondaryList}.`;
+    }
+    
+    const masterPrompt = `${conditioningSection}PROMPT:
+${subjectDesc}
+
+Theme: ${form.title.toUpperCase()}
+
+Color Palette:
+${form.primaryColor} and ${form.secondaryColor}
+
+Lighting:
+${lightingMap[form.theme] || lightingMap["Modern Premium"]}
+
+Typography:
+"${form.title}"
+${form.primaryName ? `"${form.primaryName}"` : ""}
+${form.showDate ? `Date: ${form.date}` : ""}
+${form.showVenue ? `Venue: ${form.venue}` : ""}
+
+Mood:
+${moodMap[form.eventType] || moodMap["Birthday"]}
+
+Style:
+${form.theme} aesthetic, ultra-detailed, professional event flyer grade, 8k resolution.`.trim();
+
+    return masterPrompt;
   };
 
-  const handleAIParse = () => {
-    setIsParsing(true);
-    setTimeout(() => {
-      const input = chatInput.toLowerCase();
-      if (input.includes("birthday")) handleChange("eventType", "Birthday");
-      else if (input.includes("wedding")) handleChange("eventType", "Wedding");
-      setIsParsing(false);
-      setHasOptimized(true);
-    }, 1500);
-  };
+  const StepHeader = ({ icon, title }) => (
+    <div className="flex items-center justify-between mb-6 shrink-0 gap-4">
+      <div className="flex items-center gap-3 min-w-0">
+        <div className={t.headerIcon}>{icon}</div>
+        <h2 className={`text-base md:text-lg font-bold tracking-tight truncate ${t.text}`}>{title}</h2>
+      </div>
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 shadow-sm backdrop-blur-md shrink-0">
+        {eventConfigs[form.eventType]?.icon}
+        <span className={`${t.label} hidden md:inline`}>{form.eventType}</span>
+      </div>
+    </div>
+  );
+
+  const ModernSelect = ({ value, onChange, options, label }) => (
+    <div className="space-y-1.5 flex-1 min-w-0">
+      {label && <label className={`${t.label} ml-1`}>{label}</label>}
+      <div className="relative group">
+        <select value={value} onChange={onChange} className={`w-full appearance-none rounded-2xl h-11 pl-4 pr-10 text-xs font-bold border transition-all cursor-pointer ${isDarkMode ? 'bg-slate-900/80 border-slate-700/50 text-white' : 'bg-slate-100 border-slate-300 text-slate-800'} focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/40 hover:border-indigo-500/30`}>
+          {options.map(opt => <option key={opt} value={opt} className={isDarkMode ? 'bg-slate-900 text-slate-100' : 'bg-white text-slate-800'}>{opt}</option>)}
+        </select>
+        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none group-hover:text-indigo-400 transition-colors" />
+      </div>
+    </div>
+  );
+
+  const StandardInput = ({ label, value, onChange, placeholder }) => (
+    <div className="space-y-1.5 flex-1 min-w-0">
+      <label className={`${t.label} ml-1`}>{label}</label>
+      <Input value={value} onChange={onChange} placeholder={placeholder} className={`h-11 rounded-xl text-sm font-medium ${t.input}`} />
+    </div>
+  );
+
+  const SummaryItem = ({ label, value }) => (
+    <div className={`flex justify-between items-center py-2.5 border-b ${isDarkMode ? 'border-indigo-500/10' : 'border-slate-200'}`}>
+      <span className={t.label}>{label}</span>
+      <span className={`text-xs font-medium truncate max-w-[140px] text-right ${t.text}`}>{value || "---"}</span>
+    </div>
+  );
 
   return (
-    <div className="flex h-screen w-full bg-[#09090b] text-zinc-100 font-sans overflow-hidden selection:bg-indigo-500/30 relative">
-      
-      {/* --- BACKGROUND BLOBS --- */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute -top-[10%] -left-[10%] w-[50vw] h-[50vw] rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 opacity-[0.08] blur-[120px]" />
-        <div className="absolute top-[50%] -right-[10%] w-[45vw] h-[45vw] rounded-full bg-gradient-to-tl from-amber-400/10 to-yellow-600/5 opacity-[0.08] blur-[120px]" />
-      </div>
-
-      {/* --- SIDEBAR --- */}
-      <aside className={`fixed inset-y-0 left-0 z-40 w-64 border-r border-white/5 bg-[#09090b]/70 backdrop-blur-2xl flex flex-col transition-transform duration-300 md:translate-x-0 md:static ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="h-20 flex items-center px-6 gap-3 pt-12 md:pt-0">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-            <Sparkles size={16} className="text-white" />
+    <div className={`h-screen flex flex-col transition-colors duration-300 ${t.bg} font-sans overflow-hidden relative`}>
+      {/* Mobile Drawer — sits behind, revealed by push */}
+      {isSidebarOpen && <aside className={`fixed left-0 top-0 h-full w-[280px] z-30 lg:hidden ${isDarkMode ? 'bg-slate-950 border-r border-slate-800' : 'bg-white border-r border-slate-200'} p-6 overflow-y-auto custom-scrollbar flex flex-col`}>
+        <div className="space-y-8">
+          {/* Theme Toggle — Mobile Only */}
+          <div className="flex items-center justify-between">
+            <span className={`${t.label} ${t.text}`}>{isDarkMode ? 'Dark Mode' : 'Light Mode'}</span>
+            <Button variant="ghost" size="icon" onClick={() => setIsDarkMode(!isDarkMode)} className={`rounded-full w-9 h-9 transition-all ${isDarkMode ? 'hover:bg-white/10' : 'hover:bg-slate-900/10'}`}>{isDarkMode ? <Sun className="w-4 h-4 text-white" /> : <Moon className="w-4 h-4 text-slate-600" />}</Button>
           </div>
-          <div>
-            <h1 className="font-bold text-lg tracking-tight leading-tight">GRAFIGEN</h1>
-            <p className="text-[10px] font-medium text-indigo-400 tracking-[0.2em] uppercase">Studio</p>
+          <div className="space-y-3">
+            <p className={`${t.label} px-3`}>Workflow</p>
+            {[
+              { id: "chat", icon: <MessageSquare className="w-4 h-4" />, label: "Quick Concept", hidden: globalMode === "Pro" },
+              { id: "content", icon: <Type className="w-4 h-4" />, label: "Content Details", hidden: globalMode === "Simple" },
+              { id: "images", icon: <ImageIcon className="w-4 h-4" />, label: "Subject Images" },
+              { id: "style", icon: <Palette className="w-4 h-4" />, label: "Aesthetics" }
+            ].filter(i => !i.hidden).map(item => (
+              <button key={item.id} onClick={() => { setTab(item.id); setIsSidebarOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all ${tab === item.id ? "bg-indigo-600 text-white shadow-xl translate-x-1" : isDarkMode ? "text-slate-400 hover:text-slate-200 hover:bg-slate-800/30" : "text-slate-500 hover:text-slate-700 hover:bg-slate-200"}`}>{item.icon}<span className="font-bold text-sm">{item.label}</span></button>
+            ))}
           </div>
-        </div>
-
-        <div className="flex-1 overflow-y-auto px-4 py-6 space-y-8 custom-scrollbar">
-          <div>
-            <h2 className="px-3 text-xs font-semibold text-zinc-500 tracking-wider mb-3 uppercase">Workflow</h2>
-            <nav className="space-y-1">
-              <NavItem icon={<MessageSquare size={18} />} label="Quick Concept" active={tab === "chat"} onClick={() => setTab("chat")} />
-              <NavItem icon={<Layout size={18} />} label="Content Details" active={tab === "content"} onClick={() => setTab("content")} />
-              <NavItem icon={<ImageIcon size={18} />} label="Subject Images" active={tab === "images"} onClick={() => setTab("images")} />
-              <NavItem icon={<Palette size={18} />} label="Aesthetics" active={tab === "style"} onClick={() => setTab("style")} />
-            </nav>
-          </div>
-
-          <div>
-            <h2 className="px-3 text-xs font-semibold text-zinc-500 tracking-wider mb-3 uppercase">Event Type</h2>
-            <nav className="space-y-1">
-              {Object.entries(eventConfigs).map(([key, cfg]) => (
-                <NavItem 
-                  key={key} 
-                  icon={cfg.icon} 
-                  label={key} 
-                  active={form.eventType === key} 
-                  onClick={() => handleChange("eventType", key)}
-                  style="subtle"
-                />
-              ))}
-            </nav>
-          </div>
-        </div>
-
-        <div className="p-4 border-t border-white/5">
-          {localStorage.getItem("user_session") ? (
-            <div className="flex items-center gap-3 p-3 rounded-2xl hover:bg-white/5 transition-colors group relative">
-              <div className="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold border border-indigo-500/10">
-                {JSON.parse(localStorage.getItem("user_session")).name.charAt(0)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-white truncate">{JSON.parse(localStorage.getItem("user_session")).name}</p>
-                <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Active Member</p>
-              </div>
-              <button onClick={() => { localStorage.removeItem("user_session"); window.location.reload(); }} className="text-zinc-500 hover:text-red-400 transition-colors">
-                <LogOut size={16} />
+          <div className="pt-8 border-t border-slate-800/50 space-y-4">
+            <p className={`${t.label} px-3`}>Event Type</p>
+            {Object.entries(eventConfigs).map(([key, cfg]) => (
+              <button key={key} onClick={() => { handleChange('eventType', key); setIsSidebarOpen(false); }} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-black transition-all ${form.eventType === key ? "text-indigo-400 bg-indigo-400/10 border border-indigo-500/20" : isDarkMode ? "text-slate-500 hover:text-slate-300 hover:bg-slate-800/30" : "text-slate-500 hover:text-slate-700 hover:bg-slate-200"}`}>
+                <span className="flex items-center gap-2.5">{cfg.icon}{key.toUpperCase()}</span>
               </button>
-            </div>
-          ) : (
-            <Link to="/login" className="block w-full">
-              <Button variant="outline" className="w-full h-12 rounded-xl border-white/5 bg-white/5 hover:bg-white/10 text-[10px] font-black tracking-widest">LOGIN TO ACCOUNT</Button>
-            </Link>
-          )}
-        </div>
-      </aside>
+            ))}
+          </div>
 
-      {/* --- MAIN CONTENT --- */}
-      <main className="flex-1 flex flex-col h-full relative z-10 pt-16 md:pt-0">
-        <header className="hidden md:flex h-20 items-center justify-between px-8 border-b border-white/5 bg-zinc-950/40 backdrop-blur-xl z-10">
-          <div className="flex items-center gap-4">
-            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="lg:hidden p-1 text-zinc-400 hover:text-white"><Menu size={20} /></button>
-            <div className="flex items-center gap-2 text-[10px] font-black tracking-widest text-emerald-400 bg-emerald-400/10 px-3 py-1.5 rounded-full border border-emerald-400/20">
-              <div className={`w-1.5 h-1.5 rounded-full ${isAutoSaving ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'}`} />
-              {isAutoSaving ? 'SAVING...' : 'AUTO-SAVED'}
+          <div className="mt-auto pt-8 border-t border-slate-800/50">
+            {localStorage.getItem("user_session") ? (
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-indigo-500/5 border border-indigo-500/10">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-sm font-black text-white shadow-lg shadow-indigo-600/20">
+                    {JSON.parse(localStorage.getItem("user_session")).name.charAt(0)}
+                  </div>
+                  <div className="flex flex-col">
+                    <span className={`text-xs font-black tracking-tight ${t.text}`}>{JSON.parse(localStorage.getItem("user_session")).name}</span>
+                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Active Member</span>
+                  </div>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => { localStorage.removeItem("user_session"); window.location.reload(); }} className="text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-xl">
+                  <LogOut className="w-4 h-4" />
+                </Button>
+              </div>
+            ) : (
+              <Link to="/login" className="w-full">
+                <Button variant="outline" className={`w-full h-12 rounded-xl text-[10px] font-black tracking-widest ${isDarkMode ? 'border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800' : 'border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50'}`}>LOGIN TO ACCOUNT</Button>
+              </Link>
+            )}
+          </div>
+        </div>
+      </aside>}
+
+      {/* Main Content Wrapper — pushes right on mobile when drawer is open */}
+      <div className={`flex flex-col h-full transition-transform duration-300 ease-out ${isSidebarOpen ? 'translate-x-[280px] lg:translate-x-0' : 'translate-x-0'}`}>
+        {/* Negative space tap target to close drawer */}
+        {isSidebarOpen && <div className="absolute inset-0 z-[60] lg:hidden" onClick={() => setIsSidebarOpen(false)} />}
+
+        <header className={`border-b ${isDarkMode ? 'border-slate-800/50 bg-[#0f172a]/80' : 'border-slate-200 bg-white/80'} p-3 md:p-4 z-50 backdrop-blur-md flex justify-between items-center shrink-0`}>
+          <div className="flex items-center gap-2 md:gap-3">
+            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className={`lg:hidden p-1 transition-opacity ${isDarkMode ? 'text-white/80 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}>{isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}</button>
+            <div className="w-9 h-9 md:w-11 md:h-11 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg md:rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20"><Sparkles className="text-white w-5 h-5 md:w-6 md:h-6" /></div>
+            <div className="flex flex-col justify-center h-9 md:h-11">
+              <h1 className={`text-base md:text-xl font-black tracking-tighter leading-[1] ${t.text}`}>GRAFIGEN</h1>
+              <p className={`text-[8px] md:text-[10px] font-black tracking-[0.2em] leading-[1] mt-0.5 ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>STUDIO</p>
             </div>
           </div>
-          
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-full border border-white/5">
+          <div className="flex items-center gap-3 md:gap-6">
+            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-500/5 border border-slate-500/10 transition-all">
+              <div className={`w-1.5 h-1.5 rounded-full ${isAutoSaving ? 'bg-amber-500 animate-pulse' : 'bg-green-500'}`} />
+              <span className="text-[9px] font-black tracking-widest text-slate-500 uppercase">
+                {isAutoSaving ? 'Saving...' : 'Auto-Saved'}
+              </span>
+            </div>
+
+            <div className={`flex ${isDarkMode ? 'bg-slate-800/50' : 'bg-slate-200'} p-1 rounded-full border ${isDarkMode ? 'border-slate-700' : 'border-slate-300'}`}>
               {["Simple", "Pro"].map(m => (
-                <button 
-                  key={m} 
-                  className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all ${globalMode === m ? 'bg-indigo-600 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-300'}`}
-                  onClick={() => setGlobalMode(m)}
-                >
-                  {m}
-                </button>
+                <button key={m} onClick={() => { setGlobalMode(m); setTab(m === "Simple" ? "chat" : "content"); }} className={`px-3 md:px-5 py-1.5 rounded-full text-[10px] md:text-xs font-black transition-all ${globalMode === m ? "bg-indigo-600 text-white shadow-lg" : "text-slate-500"}`}>{m}</button>
               ))}
             </div>
-            <button onClick={() => setIsDarkMode(!isDarkMode)} className="text-zinc-400 hover:text-white transition-colors p-2 rounded-full hover:bg-white/5">
-              {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
+
+            {/* Theme toggle — desktop only in header */}
+            <Button variant="ghost" size="icon" onClick={() => setIsDarkMode(!isDarkMode)} className={`hidden md:flex rounded-full w-9 h-9 md:w-11 md:h-11 transition-all ${isDarkMode ? 'hover:bg-white/10' : 'hover:bg-slate-900/10'}`}>{isDarkMode ? <Sun className="w-4 h-4 md:w-5 md:h-5 text-white" /> : <Moon className="w-4 h-4 md:w-5 md:h-5 text-slate-600" />}</Button>
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8">
-          <div className="max-w-3xl mx-auto space-y-8 relative z-10">
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-zinc-900/80 backdrop-blur-md border border-white/10 flex items-center justify-center shadow-inner">
-                  {tab === "chat" ? <MessageSquare size={24} className="text-indigo-400" /> : tab === "content" ? <Layout size={24} className="text-indigo-400" /> : tab === "images" ? <ImageIcon size={24} className="text-indigo-400" /> : <Palette size={24} className="text-indigo-400" />}
-                </div>
-                <div>
-                  <h1 className="text-2xl font-black tracking-tight uppercase">
-                    {tab === "chat" ? "Quick Concept" : tab === "content" ? "Content Details" : tab === "images" ? "Reference Images" : "Aesthetics"}
-                  </h1>
-                  <p className="text-xs font-bold text-zinc-500 tracking-widest mt-1">
-                    {tab === "chat" ? "Describe your vision in plain text." : "Configure the specifics of your generation."}
-                  </p>
-                </div>
+        <main className="flex-1 overflow-hidden grid lg:grid-cols-[240px_1fr_1fr] relative">
+          {/* Desktop Sidebar */}
+          <aside className="hidden lg:flex flex-col p-6 overflow-y-auto custom-scrollbar">
+            <div className="space-y-10">
+              <div className="space-y-3">
+                <p className={`${t.label} px-3`}>Workflow</p>
+                {[
+                  { id: "chat", icon: <MessageSquare className="w-4 h-4" />, label: "Quick Concept", hidden: globalMode === "Pro" },
+                  { id: "content", icon: <Type className="w-4 h-4" />, label: "Content Details", hidden: globalMode === "Simple" },
+                  { id: "images", icon: <ImageIcon className="w-4 h-4" />, label: "Subject Images" },
+                  { id: "style", icon: <Palette className="w-4 h-4" />, label: "Aesthetics" }
+                ].filter(i => !i.hidden).map(item => (
+                  <button key={item.id} onClick={() => setTab(item.id)} className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all ${tab === item.id ? "bg-indigo-600 text-white shadow-xl translate-x-1" : isDarkMode ? "text-slate-400 hover:text-slate-200 hover:bg-slate-800/30" : "text-slate-500 hover:text-slate-700 hover:bg-slate-200"}`}>{item.icon}<span className="font-bold text-sm">{item.label}</span></button>
+                ))}
               </div>
-              <div className="hidden sm:flex items-center gap-2 bg-indigo-500/10 text-indigo-400 px-4 py-2 rounded-full border border-indigo-500/20 text-[10px] font-black tracking-widest backdrop-blur-sm">
-                {eventConfigs[form.eventType]?.icon}
-                {form.eventType.toUpperCase()}
+              <div className="pt-10 border-t border-slate-800/50 space-y-4">
+                <p className={`${t.label} px-3`}>Event Type</p>
+                {Object.entries(eventConfigs).map(([key, cfg]) => (
+                  <button key={key} onClick={() => handleChange('eventType', key)} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-black transition-all ${form.eventType === key ? "text-indigo-400 bg-indigo-400/10 border border-indigo-500/20" : isDarkMode ? "text-slate-500 hover:text-slate-300 hover:bg-slate-800/30" : "text-slate-500 hover:text-slate-700 hover:bg-slate-200"}`}>
+                    <span className="flex items-center gap-2.5">{cfg.icon}{key.toUpperCase()}</span>
+                  </button>
+                ))}
               </div>
             </div>
 
-            <div className="grid sm:grid-cols-2 gap-4">
-              <ModeCard 
-                active={form.cardType === "Celebratory"} 
-                onClick={() => handleChange("cardType", "Celebratory")}
-                icon={<Share2 size={20} />}
-                label="Celebratory"
-                sub="Social Post"
-              />
-              <ModeCard 
-                active={form.cardType === "Invitation"} 
-                onClick={() => handleChange("cardType", "Invitation")}
-                icon={<MapPin size={20} />}
-                label="Invitation"
-                sub="Event Details"
-              />
-            </div>
-
-            <div className="bg-zinc-900/20 backdrop-blur-md border border-white/5 rounded-[2.5rem] p-1 shadow-2xl overflow-hidden">
-              {tab === "chat" && (
-                <div className="p-6 md:p-8 space-y-6">
-                  <Textarea 
-                    placeholder="Describe your vision (e.g. 'Sarah is celebrating her 30th birthday with a purple cinematic theme...')"
-                    className="w-full min-h-[160px] bg-zinc-950/60 border border-zinc-800/80 rounded-3xl p-6 text-base text-white placeholder-zinc-700 font-medium focus:ring-2 focus:ring-indigo-500/50 transition-all shadow-inner"
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                  />
-                  <div className="flex justify-end">
-                    <Button onClick={handleAIParse} disabled={!chatInput || isParsing} className="bg-indigo-600 hover:bg-indigo-500 h-14 px-8 rounded-2xl font-black tracking-widest shadow-lg shadow-indigo-600/20">
-                      {isParsing ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Sparkles size={18} className="mr-2" />}
-                      {isParsing ? "PARSING..." : "OPTIMIZE PROTOCOL"}
-                    </Button>
+            <div className="mt-auto pt-10 border-t border-slate-800/50">
+              {localStorage.getItem("user_session") ? (
+                <div className="flex items-center justify-between p-4 rounded-[2rem] bg-indigo-500/5 border border-indigo-500/10 group/user">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center text-lg font-black text-white shadow-xl shadow-indigo-600/20 group-hover/user:scale-110 transition-transform">
+                      {JSON.parse(localStorage.getItem("user_session")).name.charAt(0)}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className={`text-sm font-black tracking-tight ${t.text}`}>{JSON.parse(localStorage.getItem("user_session")).name}</span>
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Active Member</span>
+                    </div>
                   </div>
+                  <Button variant="ghost" size="icon" onClick={() => { localStorage.removeItem("user_session"); window.location.reload(); }} className="text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-2xl">
+                    <LogOut className="w-5 h-5" />
+                  </Button>
+                </div>
+              ) : (
+                <Link to="/login" className="w-full">
+                  <Button variant="outline" className={`w-full h-14 rounded-2xl text-[10px] font-black tracking-widest ${isDarkMode ? 'border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800' : 'border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50'}`}>LOGIN TO ACCOUNT</Button>
+                </Link>
+              )}
+            </div>
+          </aside>
+
+        <section className={`flex flex-col overflow-y-auto p-4 md:p-6 lg:p-8 custom-scrollbar ${isPromptGenerated ? 'hidden lg:flex' : 'flex'}`}>
+          <Card className={`${t.card} p-5 md:p-8 border-0 relative rounded-2xl`}>
+            <CardContent className="p-0 space-y-8">
+              {tab === "chat" && (
+                <div className="space-y-8 animate-in fade-in duration-500">
+                  <StepHeader icon={<Sparkles className="w-5 h-5" />} title="Quick Concept" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <button onClick={() => handleChange('cardType', 'Celebratory')} className={`flex items-center gap-4 p-4 rounded-2xl border transition-all ${form.cardType === 'Celebratory' ? "bg-indigo-600 text-white shadow-xl border-indigo-400" : isDarkMode ? "bg-slate-900/50 border-slate-800" : "bg-slate-50 border-slate-200"}`}><div className={`p-2.5 rounded-xl ${form.cardType === 'Celebratory' ? "bg-white/20" : "bg-indigo-500/20 text-indigo-400"}`}><Share2 className="w-5 h-5" /></div><div className="text-left"><p className={`text-sm font-black ${form.cardType === 'Celebratory' ? 'text-white' : t.text}`}>Celebratory</p><p className={`text-[9px] uppercase font-black tracking-widest ${form.cardType === 'Celebratory' ? 'text-white/70' : 'text-slate-500'}`}>Social Post</p></div></button>
+                    <button onClick={() => handleChange('cardType', 'Invitation')} className={`flex items-center gap-4 p-4 rounded-2xl border transition-all ${form.cardType === 'Invitation' ? "bg-indigo-600 text-white shadow-xl border-indigo-400" : isDarkMode ? "bg-slate-900/50 border-slate-800" : "bg-slate-50 border-slate-200"}`}><div className={`p-2.5 rounded-xl ${form.cardType === 'Invitation' ? "bg-white/20" : "bg-indigo-500/20 text-indigo-400"}`}><MapPin className="w-5 h-5" /></div><div className="text-left"><p className={`text-sm font-black ${form.cardType === 'Invitation' ? 'text-white' : t.text}`}>Invitation</p><p className={`text-[9px] uppercase font-black tracking-widest ${form.cardType === 'Invitation' ? 'text-white/70' : 'text-slate-500'}`}>Event Details</p></div></button>
+                  </div>
+                  <Textarea placeholder="Describe your vision..." className={`min-h-[140px] md:min-h-[180px] ${t.input} text-base rounded-xl p-5 focus:ring-2 transition-all`} value={chatInput} onChange={(e) => { setChatInput(e.target.value); setHasOptimized(false); }} />
+                  <div className="flex justify-end"><Button className={t.buttonPrimary} disabled={!chatInput || isParsing} onClick={handleAIParse}>{isParsing ? <RefreshCw className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />} OPTIMIZE</Button></div>
+                  {hasOptimized && (
+                    <div className="pt-8 border-t border-slate-800/50 space-y-6 animate-in fade-in duration-500">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <StandardInput label="Event Title" value={form.title} onChange={e => handleChange('title', e.target.value)} />
+                        <StandardInput label="Celebrant Name" value={form.primaryName} onChange={e => handleChange('primaryName', e.target.value)} />
+                      </div>
+                      <div className="flex justify-end"><Button className={t.buttonPrimary} onClick={() => setTab("images")}>NEXT STEP <ChevronRight className="w-4 h-4 ml-1" /></Button></div>
+                    </div>
+                  )}
                 </div>
               )}
 
               {tab === "content" && (
-                <div className="divide-y divide-white/5">
-                  <FormSection label="Main Headline" enabled={form.showTitle} onToggle={(v) => handleChange("showTitle", v)}>
-                    <div className="space-y-4">
-                      <Input value={form.title} onChange={e => handleChange("title", e.target.value)} className="bg-zinc-950/60 border-zinc-800/80 h-12 rounded-xl text-white font-medium" />
-                      <div className="grid grid-cols-2 gap-4">
-                        <SelectField label="Size" value={form.titleSize} options={["Extra Large", "Large", "Medium", "Small"]} onChange={v => handleChange("titleSize", v)} />
-                        <SelectField label="Position" value={form.titlePosition} options={["Lower Third", "Center", "Top", "Overlay"]} onChange={v => handleChange("titlePosition", v)} />
-                      </div>
-                    </div>
-                  </FormSection>
-                  <FormSection label="Celebrant Name" enabled={form.showName} onToggle={(v) => handleChange("showName", v)}>
-                    <div className="space-y-4">
-                      <Input value={form.primaryName} onChange={e => handleChange("primaryName", e.target.value)} placeholder="Enter name..." className="bg-zinc-950/60 border-zinc-800/80 h-12 rounded-xl text-white font-medium" />
-                      <div className="grid grid-cols-2 gap-4">
-                        <SelectField label="Presence" value={form.primaryNameSize} options={["Large", "Medium", "Subtle"]} onChange={v => handleChange("primaryNameSize", v)} />
-                        <SelectField label="Align" value={form.primaryNamePosition} options={["Center", "Left", "Right"]} onChange={v => handleChange("primaryNamePosition", v)} />
-                      </div>
-                    </div>
-                  </FormSection>
-                  <FormSection label="Event Date" enabled={form.showDate} onToggle={(v) => handleChange("showDate", v)}>
-                    <Input type="date" value={form.date} onChange={e => handleChange("date", e.target.value)} className="bg-zinc-950/60 border-zinc-800/80 h-12 rounded-xl text-white font-medium" />
-                  </FormSection>
-                  <FormSection label="Event Time" enabled={form.showTime} onToggle={(v) => handleChange("showTime", v)}>
-                    <Input type="time" value={form.time} onChange={e => handleChange("time", e.target.value)} className="bg-zinc-950/60 border-zinc-800/80 h-12 rounded-xl text-white font-medium" />
-                  </FormSection>
-                  <FormSection label="Venue / Location" enabled={form.showVenue} onToggle={(v) => handleChange("showVenue", v)}>
-                    <Input value={form.venue} onChange={e => handleChange("venue", e.target.value)} placeholder="Address or venue name..." className="bg-zinc-950/60 border-zinc-800/80 h-12 rounded-xl text-white font-medium" />
-                  </FormSection>
-                  <FormSection label="RSVP / Event Link" enabled={form.showRsvp} onToggle={(v) => handleChange("showRsvp", v)}>
-                    <Input value={form.rsvpLink} onChange={e => handleChange("rsvpLink", e.target.value)} placeholder="https://..." className="bg-zinc-950/60 border-zinc-800/80 h-12 rounded-xl text-white font-medium" />
-                  </FormSection>
-                  <div className="p-6 md:p-8">
-                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3 block">Footer Message</label>
-                    <Textarea value={form.footerMessage} onChange={e => handleChange("footerMessage", e.target.value)} className="bg-zinc-950/60 border-zinc-800/80 min-h-[80px] rounded-xl text-white font-medium" />
+                <div className="space-y-8 animate-in fade-in duration-500">
+                  <StepHeader icon={<Type className="w-5 h-5" />} title="Content Details" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <button onClick={() => handleChange('cardType', 'Celebratory')} className={`flex items-center gap-4 p-4 rounded-2xl border transition-all ${form.cardType === 'Celebratory' ? "bg-indigo-600 text-white shadow-xl border-indigo-400" : isDarkMode ? "bg-slate-900/50 border-slate-800" : "bg-slate-50 border-slate-200"}`}><div className={`p-2.5 rounded-xl ${form.cardType === 'Celebratory' ? "bg-white/20" : "bg-indigo-500/20 text-indigo-400"}`}><Share2 className="w-5 h-5" /></div><div className="text-left"><p className={`text-sm font-black ${form.cardType === 'Celebratory' ? 'text-white' : t.text}`}>Celebratory</p><p className={`text-[9px] uppercase font-black tracking-widest ${form.cardType === 'Celebratory' ? 'text-white/70' : 'text-slate-500'}`}>Social Post</p></div></button>
+                    <button onClick={() => handleChange('cardType', 'Invitation')} className={`flex items-center gap-4 p-4 rounded-2xl border transition-all ${form.cardType === 'Invitation' ? "bg-indigo-600 text-white shadow-xl border-indigo-400" : isDarkMode ? "bg-slate-900/50 border-slate-800" : "bg-slate-50 border-slate-200"}`}><div className={`p-2.5 rounded-xl ${form.cardType === 'Invitation' ? "bg-white/20" : "bg-indigo-500/20 text-indigo-400"}`}><MapPin className="w-5 h-5" /></div><div className="text-left"><p className={`text-sm font-black ${form.cardType === 'Invitation' ? 'text-white' : t.text}`}>Invitation</p><p className={`text-[9px] uppercase font-black tracking-widest ${form.cardType === 'Invitation' ? 'text-white/70' : 'text-slate-500'}`}>Event Details</p></div></button>
                   </div>
+
+                  <div className="space-y-5">
+                    {/* Title Field — Toggle Activated */}
+                    <div className={`rounded-2xl border overflow-hidden ${isDarkMode ? 'bg-slate-900/30 border-slate-700/30' : 'bg-slate-50 border-slate-200'}`}>
+                      <div className="flex items-center justify-between p-4 cursor-pointer" onClick={() => handleChange('showTitle', !form.showTitle)}>
+                        <span className={`${t.label} ${t.text}`}>{nameLabels[form.eventType]?.title || "Main Headline"}</span>
+                        <Switch checked={form.showTitle} onCheckedChange={(v) => handleChange('showTitle', v)} />
+                      </div>
+                      {form.showTitle && (
+                        <div className="px-4 pb-4 space-y-4">
+                          <Input value={form.title} onChange={e => handleChange('title', e.target.value)} placeholder="Enter headline..." className={`h-11 rounded-xl text-sm font-medium ${t.input}`} />
+                          <div className="grid grid-cols-2 gap-4">
+                            <ModernSelect label="Size" value={form.titleSize} onChange={e => handleChange('titleSize', e.target.value)} options={["Large", "Extra Large", "Massive"]} />
+                            <ModernSelect label="Position" value={form.titlePosition} onChange={e => handleChange('titlePosition', e.target.value)} options={["Top", "Center", "Lower Third"]} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Name Field — Context Aware */}
+                    <div className={`rounded-2xl border overflow-hidden ${isDarkMode ? 'bg-slate-900/30 border-slate-700/30' : 'bg-slate-50 border-slate-200'}`}>
+                      <div className="flex items-center justify-between p-4 cursor-pointer" onClick={() => handleChange('showName', !form.showName)}>
+                        <span className={`${t.label} ${t.text}`}>{nameLabels[form.eventType]?.name || "Subject Name"}</span>
+                        <Switch checked={form.showName} onCheckedChange={(v) => handleChange('showName', v)} />
+                      </div>
+                      {form.showName && (
+                        <div className="px-4 pb-4 space-y-4">
+                          {form.eventType === "Wedding" && (
+                            <div className="flex items-center justify-between pb-3 mb-1">
+                              <span className={t.label}>Separate Bride & Groom</span>
+                              <Switch checked={form.separateNames} onCheckedChange={(v) => handleChange('separateNames', v)} />
+                            </div>
+                          )}
+                          {form.eventType === "Wedding" && form.separateNames ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div className="space-y-1.5"><label className={`${t.label} ml-1`}>Bride's Name</label><Input value={form.brideName} onChange={e => handleChange('brideName', e.target.value)} placeholder="Bride..." className={`h-11 rounded-xl text-sm font-medium ${t.input}`} /></div>
+                              <div className="space-y-1.5"><label className={`${t.label} ml-1`}>Groom's Name</label><Input value={form.groomName} onChange={e => handleChange('groomName', e.target.value)} placeholder="Groom..." className={`h-11 rounded-xl text-sm font-medium ${t.input}`} /></div>
+                            </div>
+                          ) : (
+                            <Input value={form.primaryName} onChange={e => handleChange('primaryName', e.target.value)} placeholder={nameLabels[form.eventType]?.name || "Name..."} className={`h-11 rounded-xl text-sm font-medium ${t.input}`} />
+                          )}
+                          <div className="grid grid-cols-2 gap-4">
+                            <ModernSelect label="Presence" value={form.primaryNameSize} onChange={e => handleChange('primaryNameSize', e.target.value)} options={["Normal", "Large", "Extra Large"]} />
+                            <ModernSelect label="Align" value={form.primaryNamePosition} onChange={e => handleChange('primaryNamePosition', e.target.value)} options={["Center", "Top", "Bottom"]} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Invitation-Only Fields */}
+                    {form.cardType === "Invitation" && (
+                      <>
+                        {[
+                          { key: 'showDate', label: 'Event Date', field: 'date', type: 'date', placeholder: '' },
+                          { key: 'showTime', label: 'Event Time', field: 'time', type: 'time', placeholder: '' },
+                          { key: 'showVenue', label: 'Venue / Location', field: 'venue', type: 'text', placeholder: 'Enter venue...' },
+                          { key: 'showRsvp', label: 'RSVP / Event Link', field: 'rsvpLink', type: 'url', placeholder: 'https://...' }
+                        ].map(item => (
+                          <div key={item.key} className={`rounded-2xl border overflow-hidden ${isDarkMode ? 'bg-slate-900/30 border-slate-700/30' : 'bg-slate-50 border-slate-200'}`}>
+                            <div className="flex items-center justify-between p-4 cursor-pointer" onClick={() => handleChange(item.key, !form[item.key])}>
+                              <span className={`${t.label} ${t.text}`}>{item.label}</span>
+                              <Switch checked={form[item.key]} onCheckedChange={(v) => handleChange(item.key, v)} />
+                            </div>
+                            {form[item.key] && (
+                              <div className="px-4 pb-4">
+                                <Input type={item.type} value={form[item.field]} onChange={e => handleChange(item.field, e.target.value)} placeholder={item.placeholder} className={`h-11 rounded-xl text-sm font-medium ${t.input}`} />
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </>
+                    )}
+                  </div>
+
+                  <div className="flex justify-end pt-8 border-t border-slate-800/50"><Button className={t.buttonPrimary} onClick={() => setTab("images")}>NEXT STEP <ChevronRight className="w-4 h-4 ml-1" /></Button></div>
                 </div>
               )}
 
               {tab === "images" && (
-                <div className="p-6 md:p-8 space-y-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <ImageUploadCard label="Identity Reference (Face)" url={form.primaryPortraitUrl} onUpload={() => handleImageUpload("primaryPortraitUrl")} onClear={() => handleChange("primaryPortraitUrl", "")} />
-                    <ImageUploadCard label="Style Reference (Action)" url={form.lifestyleActionUrl} onUpload={() => handleImageUpload("lifestyleActionUrl")} onClear={() => handleChange("lifestyleActionUrl", "")} />
+                <div className="space-y-8 animate-in fade-in duration-500">
+                  <StepHeader icon={<ImageIcon className="w-5 h-5" />} title="Reference Conditioning" />
+                  <div className="space-y-4">
+                    {[
+                      { key: 'showPrimaryName', label: 'Identity Reference (Face)', urlKey: 'primaryPortraitUrl', desc: 'Preserves exact facial likeness' },
+                      { key: 'showCelebrantSecondary', label: 'Style Reference (Action)', urlKey: 'lifestyleActionUrl', desc: 'Composition & posing inspiration' }
+                    ].map(row => (
+                      <div key={row.key} className="space-y-3">
+                        <div className={`flex items-center justify-between p-4 rounded-xl border transition-all ${isDarkMode ? 'bg-indigo-500/5 border-indigo-500/10' : 'bg-slate-50 border-slate-200'}`}>
+                          <div className="flex flex-col">
+                            <span className={`${t.label} ${t.text}`}>{row.label}</span>
+                            <span className="text-[9px] font-medium text-slate-500 uppercase tracking-wider">{row.desc}</span>
+                          </div>
+                          <Switch checked={form[row.key]} onCheckedChange={(v) => handleChange(row.key, v)} />
+                        </div>
+                        {form[row.key] && (
+                          <div className="flex items-center gap-4 animate-in slide-in-from-top-2 duration-300">
+                            <Button 
+                              onClick={() => handleImageUpload(row.urlKey)} 
+                              variant="outline" 
+                              className={`flex-1 h-11 border-dashed border-2 ${isDarkMode ? 'border-slate-700 hover:border-indigo-500 bg-slate-900/50' : 'border-slate-300 hover:border-indigo-500 bg-white'} rounded-xl text-[10px] font-black tracking-widest text-slate-500 hover:text-indigo-400 transition-all`}
+                            >
+                              {form[row.urlKey] ? (
+                                <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> IMAGE ATTACHED</span>
+                              ) : (
+                                <span className="flex items-center gap-2"><Plus className="w-4 h-4" /> ATTACH IMAGE</span>
+                              )}
+                            </Button>
+                            {form[row.urlKey] && (
+                              <div className="w-11 h-11 rounded-lg overflow-hidden border border-slate-700 bg-slate-800 shrink-0">
+                                <img src={form[row.urlKey]} alt="Preview" className="w-full h-full object-cover" />
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                  <div className="pt-6 border-t border-white/5 space-y-4">
-                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Secondary Subjects</label>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                      {["Family", "Friends", "Partner", "Colleagues"].map(subj => (
-                        <button key={subj} onClick={() => {
-                          const exist = form.secondarySubjects.includes(subj);
-                          handleChange('secondarySubjects', exist ? form.secondarySubjects.filter(s => s !== subj) : [...form.secondarySubjects, subj]);
-                        }} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${form.secondarySubjects.includes(subj) ? 'bg-indigo-600 border-indigo-400 text-white' : 'bg-zinc-900 border-white/5 text-zinc-500 hover:text-zinc-300'}`}>
-                          {subj}
-                        </button>
+                  <div className="space-y-4">
+                    <p className={`${t.label} ml-1`}>Inclusions</p>
+                    <div className="grid grid-cols-1 gap-3">
+                      {currentPresets.map(subject => (
+                        <div key={subject} className="space-y-2">
+                          <div onClick={() => handleSubjectToggle(subject)} className={`flex items-center justify-between gap-3 p-4 rounded-xl border cursor-pointer transition-all ${form.secondarySubjects.includes(subject) ? "bg-indigo-600/10 border-indigo-500 shadow-lg" : isDarkMode ? "bg-slate-900/50 border-slate-800" : "bg-white border-slate-200"}`}>
+                            <span className={`${t.label} truncate ${t.text}`}>{subject}</span>
+                            <div onClick={(e) => e.stopPropagation()}><Checkbox checked={form.secondarySubjects.includes(subject)} onCheckedChange={() => handleSubjectToggle(subject)} /></div>
+                          </div>
+                          {form.secondarySubjects.includes(subject) && (
+                            <div className="flex items-center gap-4 pl-4 animate-in slide-in-from-left-2 duration-300">
+                              <Button 
+                                onClick={() => handleImageUpload(null, subject)} 
+                                variant="outline" 
+                                className={`flex-1 h-10 border-dashed border-2 ${isDarkMode ? 'border-slate-800 hover:border-indigo-500 bg-slate-950/30' : 'border-slate-200 hover:border-indigo-500 bg-slate-50'} rounded-lg text-[9px] font-black tracking-widest text-slate-500 hover:text-indigo-400 transition-all`}
+                              >
+                                {form.subjectUrls[subject] ? (
+                                  <span className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-green-500" /> SYNC'D</span>
+                                ) : (
+                                  <span className="flex items-center gap-2"><Plus className="w-3 h-3" /> ATTACH {subject.toUpperCase()}</span>
+                                )}
+                              </Button>
+                              {form.subjectUrls[subject] && (
+                                <div className="w-10 h-10 rounded-md overflow-hidden border border-slate-800 bg-slate-900 shrink-0">
+                                  <img src={form.subjectUrls[subject]} alt="Preview" className="w-full h-full object-cover" />
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       ))}
                     </div>
-                    <Input placeholder="Custom secondary subjects..." value={form.customSecondary} onChange={e => handleChange('customSecondary', e.target.value)} className="bg-zinc-950/60 border-zinc-800/80 h-11 rounded-xl text-white text-xs font-medium" />
+                    <StandardInput label="Custom" placeholder="Other..." value={form.customSecondary} onChange={e => handleChange('customSecondary', e.target.value)} />
                   </div>
+                  <div className="flex justify-end pt-8 border-t border-slate-800/50"><Button className={t.buttonPrimary} onClick={() => setTab("style")}>NEXT STEP <ChevronRight className="w-4 h-4 ml-1" /></Button></div>
                 </div>
               )}
 
               {tab === "style" && (
-                <div className="divide-y divide-white/5">
-                  <div className="p-6 md:p-8 space-y-4">
-                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Visual Theme</label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {["Modern Premium", "Minimalist", "Vibrant", "Classic"].map(t => (
-                        <button key={t} onClick={() => handleChange('theme', t)} className={`p-4 rounded-2xl text-left border transition-all ${form.theme === t ? 'bg-indigo-600 border-indigo-400 text-white' : 'bg-zinc-900 border-white/5 text-zinc-500 hover:text-zinc-300'}`}>
-                          <p className="text-xs font-black uppercase tracking-widest">{t}</p>
-                        </button>
-                      ))}
-                    </div>
+                <div className="space-y-8 animate-in fade-in duration-500">
+                  <StepHeader icon={<Palette className="w-5 h-5" />} title="Aesthetics" />
+                  <div className="grid grid-cols-2 gap-3 md:gap-4">
+                    {palettes.map(p => (
+                      <button key={p.name} onClick={() => { handleChange('primaryColor', p.primary); handleChange('secondaryColor', p.secondary); }} className={`p-5 rounded-2xl border transition-all text-left ${form.primaryColor === p.primary ? "bg-indigo-600/10 border-indigo-500 shadow-xl" : isDarkMode ? "bg-slate-900/50 border-slate-800" : "bg-slate-50 border-slate-200"}`}>
+                        <p className={`text-[11px] font-semibold uppercase mb-3 tracking-tight ${form.primaryColor === p.primary ? "text-indigo-400" : "text-slate-500"}`}>{p.name}</p>
+                        <div className="flex gap-3"><div className="w-10 h-10 rounded-xl shadow-lg" style={{ backgroundColor: p.primary }} /><div className="w-10 h-10 rounded-xl shadow-lg border border-slate-700/20" style={{ backgroundColor: p.secondary }} /></div>
+                      </button>
+                    ))}
                   </div>
-                  <div className="p-6 md:p-8 grid grid-cols-2 gap-6">
-                    <div className="space-y-3">
-                      <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Primary Color</label>
-                      <div className="flex gap-3">
-                        <input type="color" value={form.primaryColor} onChange={e => handleChange('primaryColor', e.target.value)} className="w-12 h-12 rounded-xl bg-transparent border-0 cursor-pointer overflow-hidden" />
-                        <Input value={form.primaryColor} onChange={e => handleChange('primaryColor', e.target.value)} className="flex-1 bg-zinc-950/60 border-zinc-800/80 h-12 rounded-xl text-white font-mono text-xs" />
-                      </div>
-                    </div>
-                    <div className="space-y-3">
-                      <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Secondary Color</label>
-                      <div className="flex gap-3">
-                        <input type="color" value={form.secondaryColor} onChange={e => handleChange('secondaryColor', e.target.value)} className="w-12 h-12 rounded-xl bg-transparent border-0 cursor-pointer overflow-hidden" />
-                        <Input value={form.secondaryColor} onChange={e => handleChange('secondaryColor', e.target.value)} className="flex-1 bg-zinc-950/60 border-zinc-800/80 h-12 rounded-xl text-white font-mono text-xs" />
-                      </div>
-                    </div>
+                  <div className="flex justify-end pt-8 border-t border-slate-800/50">
+                    <Button className={`${t.buttonPrimary} w-full sm:w-auto h-14 text-sm`} onClick={() => setIsPromptGenerated(true)}>FINALIZE PROMPT <Zap className="w-4 h-4 ml-2" /></Button>
                   </div>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </section>
+
+        <aside className={`flex flex-col overflow-y-auto p-4 md:p-6 lg:p-8 custom-scrollbar ${isPromptGenerated ? 'flex fixed inset-0 z-[60] lg:relative lg:z-auto' : 'hidden lg:flex'}`}>
+          <Card className={`${t.card} p-[50px] border-0 h-full flex flex-col relative rounded-2xl overflow-hidden`}>
+            {isPromptGenerated && <div className="absolute top-6 right-6 z-[70] lg:hidden"><Button onClick={() => setIsPromptGenerated(false)} variant="ghost" size="icon" className="rounded-full bg-slate-900/50 text-white"><X className="w-5 h-5" /></Button></div>}
+            
+            <div className="flex items-center justify-between mb-8 shrink-0 relative z-10">
+              <h2 className="font-black flex items-center gap-2 text-[11px] uppercase tracking-[0.3em] text-slate-500">
+                <Layout className="w-4 h-4 text-indigo-400" /> {isPromptGenerated ? "Master Prompt" : "Graphic Data"}
+              </h2>
+              {!isPromptGenerated && <span className="text-[8px] font-black tracking-widest px-3 py-1.5 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">LIVE SUMMARY</span>}
             </div>
 
-            <div className="pt-4 pb-12 flex justify-end">
-              <Button onClick={generatePrompt} className="bg-indigo-600 hover:bg-indigo-500 h-16 px-10 rounded-2xl font-black tracking-tighter text-lg shadow-[0_0_40px_-5px_rgba(99,102,241,0.4)] transition-all transform hover:-translate-y-1 active:translate-y-0">
-                <Zap size={22} className="fill-current mr-3" />
-                GENERATE CONCEPT
-              </Button>
+            <div className="flex-1 relative rounded-xl overflow-hidden min-h-[300px]">
+              {isPromptGenerated ? (
+                <div className="h-full animate-in zoom-in-95 fade-in duration-500 flex flex-col">
+                  <Textarea value={generatePrompt()} readOnly className={`flex-1 border-0 rounded-xl p-6 text-xs font-mono leading-relaxed resize-none ${isDarkMode ? 'bg-slate-950/80 text-indigo-100/80' : 'bg-slate-100 text-slate-700'}`} />
+                  <div className="flex gap-4 pt-6"><Button onClick={() => { navigator.clipboard.writeText(generatePrompt()); alert("Prompt Copied!"); }} className="flex-1 bg-indigo-600 h-14 font-black tracking-widest text-white rounded-xl shadow-indigo-600/20"><Copy className="w-4 h-4 mr-2" /> COPY PROMPT</Button></div>
+                </div>
+              ) : (
+                <div className="h-full flex flex-col space-y-2 p-1 overflow-y-auto custom-scrollbar">
+                  <SummaryItem label="Event Type" value={form.eventType} />
+                  <SummaryItem label="Design Mode" value={form.cardType === "Celebratory" ? "Social Media" : "Official Invitation"} />
+                  {form.showTitle && <SummaryItem label="Headline" value={form.title} />}
+                  {form.showName && (form.eventType === "Wedding" && form.separateNames
+                    ? <SummaryItem label="Couple" value={[form.brideName, form.groomName].filter(Boolean).join(" & ") || "---"} />
+                    : <SummaryItem label={nameLabels[form.eventType]?.name || "Subject"} value={form.primaryName} />
+                  )}
+                  <SummaryItem label="Inclusions" value={(form.secondarySubjects || []).join(", ") || "None"} />
+                  {form.cardType === "Invitation" && form.showDate && <SummaryItem label="Date" value={form.date} />}
+                  {form.cardType === "Invitation" && form.showTime && <SummaryItem label="Time" value={form.time} />}
+                  {form.cardType === "Invitation" && form.showVenue && <SummaryItem label="Venue" value={form.venue} />}
+                  {form.cardType === "Invitation" && form.showRsvp && <SummaryItem label="RSVP Link" value={form.rsvpLink} />}
+                  <SummaryItem label="Theme" value={form.theme} />
+                </div>
+              )}
             </div>
-          </div>
-        </div>
-      </main>
+          </Card>
+        </aside>
+        </main>
+      </div>
 
-      {/* --- SUMMARY SIDEBAR --- */}
-      <aside className="hidden xl:flex w-80 border-l border-white/5 bg-[#09090b]/70 backdrop-blur-2xl flex-col z-20">
-        <div className="h-20 flex items-center justify-between px-6 border-b border-white/5">
-          <div className="flex items-center gap-2 text-[10px] font-black tracking-widest text-zinc-400">
-            <Layout size={16} />
-            GRAPHIC DATA
-          </div>
-          <div className="text-[10px] font-black bg-indigo-500/10 text-indigo-400 px-2 py-1 rounded border border-indigo-500/20 tracking-widest uppercase">
-            Live Summary
-          </div>
-        </div>
-        
-        <div className="p-6 flex-1 space-y-6 overflow-y-auto custom-scrollbar">
-          <div className="bg-zinc-900/40 backdrop-blur-sm border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
-            <SummaryRow label="Event" value={form.eventType} />
-            <SummaryRow label="Type" value={form.cardType} />
-            <SummaryRow label="Headline" value={form.title} highlight />
-            <SummaryRow label="Celebrant" value={form.primaryName} />
-            <SummaryRow label="Inclusions" value={form.secondarySubjects.join(', ') + (form.customSecondary ? `, ${form.customSecondary}` : '')} />
-            <SummaryRow label="Theme" value={form.theme} />
-          </div>
-
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 backdrop-blur-md">
-            <div className="flex items-start gap-3">
-              <Sparkles size={18} className="text-indigo-400 mt-0.5 shrink-0" />
-              <p className="text-[11px] font-bold text-indigo-200/60 leading-relaxed uppercase tracking-wider">
-                All modifications are synchronized across the studio network.
-              </p>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      <style dangerouslySetInnerHTML={{__html: `
+      <style>{`
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(161, 161, 170, 0.1); border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(161, 161, 170, 0.2); }
-      `}} />
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.2); border-radius: 10px; }
+        .animate-in { animation: fade-in 0.5s ease-out; }
+      `}</style>
     </div>
   );
 }
-
-const NavItem = ({ icon, label, active, onClick, style="default" }) => (
-  <button onClick={onClick} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${active ? style === "default" ? "bg-indigo-600 text-white shadow-xl shadow-indigo-500/20" : "bg-zinc-800 text-white border border-white/5" : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5"}`}>
-    <div className={active ? "text-white" : "text-zinc-600"}>{icon}</div>
-    {label}
-  </button>
-);
-
-const ModeCard = ({ active, onClick, icon, label, sub }) => (
-  <button onClick={onClick} className={`relative p-5 rounded-3xl flex items-start gap-4 text-left transition-all duration-300 ${active ? 'bg-indigo-500/10 border border-indigo-500/30 shadow-2xl' : 'bg-zinc-900/40 border border-white/5 hover:bg-zinc-900/60'}`}>
-    <div className={`p-3 rounded-2xl ${active ? 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-500'}`}>{icon}</div>
-    <div>
-      <h3 className={`font-black tracking-tight ${active ? 'text-white' : 'text-zinc-400'}`}>{label}</h3>
-      <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mt-1">{sub}</p>
-    </div>
-    {active && <CheckCircle2 className="absolute top-4 right-4 text-indigo-500" size={18} />}
-  </button>
-);
-
-const FormSection = ({ label, enabled, onToggle, children }) => (
-  <div className="p-6 md:p-8 space-y-4">
-    <div className="flex items-center justify-between">
-      <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{label}</label>
-      <Switch checked={enabled} onCheckedChange={onToggle} className="data-[state=checked]:bg-indigo-500" />
-    </div>
-    <div className={`transition-all duration-300 ${!enabled ? 'opacity-30 pointer-events-none' : ''}`}>
-      {children}
-    </div>
-  </div>
-);
-
-const SelectField = ({ label, value, options, onChange }) => (
-  <div>
-    <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-2 block">{label}</label>
-    <div className="relative">
-      <select value={value} onChange={e => onChange(e.target.value)} className="w-full appearance-none bg-zinc-950/60 border border-zinc-800/80 rounded-xl px-4 py-3 text-sm text-white font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all cursor-pointer">
-        {options.map(opt => <option key={opt}>{opt}</option>)}
-      </select>
-      <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
-    </div>
-  </div>
-);
-
-const ImageUploadCard = ({ label, url, onUpload, onClear }) => (
-  <div className="space-y-3">
-    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">{label}</label>
-    <div className="relative aspect-square rounded-3xl bg-zinc-950/60 border border-zinc-800/80 overflow-hidden group">
-      {url ? (
-        <>
-          <img src={url} className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
-            <Button size="icon" variant="ghost" onClick={onUpload} className="bg-white/10 hover:bg-white/20 text-white rounded-xl"><RefreshCw size={18} /></Button>
-            <Button size="icon" variant="ghost" onClick={onClear} className="bg-red-500/20 hover:bg-red-500/40 text-red-400 rounded-xl"><Trash2 size={18} /></Button>
-          </div>
-        </>
-      ) : (
-        <button onClick={onUpload} className="w-full h-full flex flex-col items-center justify-center gap-3 text-zinc-600 hover:text-indigo-400 hover:bg-indigo-500/5 transition-all">
-          <ImageIcon size={32} />
-          <span className="text-[10px] font-black uppercase tracking-widest">Connect Image</span>
-        </button>
-      )}
-    </div>
-  </div>
-);
-
-const SummaryRow = ({ label, value, highlight }) => (
-  <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 last:border-0">
-    <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">{label}</span>
-    <span className={`text-sm font-bold text-right truncate max-w-[140px] ${highlight ? 'text-indigo-400' : 'text-zinc-300'}`}>{value || "---"}</span>
-  </div>
-);

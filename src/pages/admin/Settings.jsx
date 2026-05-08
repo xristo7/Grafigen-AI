@@ -34,14 +34,32 @@ export default function Settings() {
   });
 
   useEffect(() => {
-    const saved = localStorage.getItem("grafigen_config");
-    if (saved) setConfig(JSON.parse(saved));
+    fetch('/api/config')
+      .then(res => res.json())
+      .then(data => {
+        if (Object.keys(data).length > 0) setConfig(data);
+      })
+      .catch(err => console.error("Failed to fetch config from Neon", err));
   }, []);
 
-  const handleSave = () => {
-    localStorage.setItem("grafigen_config", JSON.stringify(config));
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 3000);
+  const handleSave = async () => {
+    try {
+      const response = await fetch('/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config)
+      });
+      
+      if (response.ok) {
+        setIsSaved(true);
+        // Also update local storage as a fallback/cache
+        localStorage.setItem("grafigen_config", JSON.stringify(config));
+        setTimeout(() => setIsSaved(false), 3000);
+      }
+    } catch (err) {
+      console.error("Failed to save config to Neon", err);
+      alert("Error saving to database. Check console.");
+    }
   };
 
   return (
