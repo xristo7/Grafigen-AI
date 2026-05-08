@@ -816,13 +816,13 @@ ${form.theme} aesthetic, ultra-detailed, professional event flyer grade, 8k reso
                   ) : (
                     <div className="h-full flex flex-col overflow-hidden relative">
                       {/* --- ADAPTIVE HEADER --- */}
-                      <div className={`flex items-center justify-between px-8 py-5 border-b shrink-0 transition-colors duration-500 ${
+                      <div className={`flex items-center justify-between px-8 py-4 border-b shrink-0 transition-colors duration-500 ${
                         isDarkMode 
-                          ? 'bg-black/40 border-white/5' 
-                          : 'bg-white/60 border-black/5'
+                          ? 'bg-black/10 border-white/[0.05]' 
+                          : 'bg-white/30 border-black/[0.05]'
                       }`}>
-                        <span className={`text-[10px] font-semibold tracking-[0.3em] uppercase ${isDarkMode ? 'text-white/90' : 'text-slate-900'}`}>Data</span>
-                        <span className={`text-[10px] font-semibold tracking-[0.3em] uppercase ${isDarkMode ? 'text-white/90' : 'text-slate-900'}`}>Values</span>
+                        <span className={`text-[10px] font-semibold tracking-[0.3em] uppercase ${isDarkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Data</span>
+                        <span className={`text-[10px] font-semibold tracking-[0.3em] uppercase ${isDarkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Values</span>
                       </div>
 
                       {/* --- SCROLLABLE BODY --- */}
@@ -843,20 +843,17 @@ ${form.theme} aesthetic, ultra-detailed, professional event flyer grade, 8k reso
                           <SummaryItem label="Aesthetic" value={form.theme} />
                         </div>
                         {/* Buffer for Floating Button */}
-                        <div className="h-[140px] md:h-[160px]" />
+                        <div className="h-[100px] md:h-[120px]" />
                       </div>
 
-                      {/* --- FLOATING GENERATE ACTION --- */}
-                      <div className={`absolute bottom-0 inset-x-0 p-5 md:p-8 pt-10 bg-gradient-to-t ${isDarkMode ? 'from-zinc-950/80 via-zinc-950/40' : 'from-white/60 via-white/20'} to-transparent flex flex-col items-center pointer-events-none`}>
+                      {/* --- FLOATING GENERATE ACTION (GOLD) --- */}
+                      <div className={`absolute bottom-0 inset-x-0 p-5 md:p-8 pt-6 bg-gradient-to-t ${isDarkMode ? 'from-zinc-950/60 via-zinc-950/20' : 'from-white/40 via-white/10'} to-transparent flex flex-col items-center pointer-events-none`}>
                         <Button 
                           onClick={() => setIsPromptGenerated(true)}
-                          className="w-full max-w-[280px] bg-indigo-600 hover:bg-indigo-500 h-14 md:h-16 rounded-2xl text-[11px] font-semibold tracking-[0.2em] text-white shadow-xl shadow-indigo-600/30 transition-all active:scale-[0.98] pointer-events-auto flex items-center justify-center gap-3"
+                          className="w-full max-w-[240px] bg-[#D4AF37] hover:bg-[#C19A2D] h-12 md:h-14 rounded-xl text-[10px] font-semibold tracking-[0.2em] text-black shadow-xl shadow-[#D4AF37]/20 transition-all active:scale-[0.98] pointer-events-auto flex items-center justify-center gap-2"
                         >
-                          <Zap size={18} /> GENERATE ASSETS
+                          <Zap size={16} fill="currentColor" /> GENERATE ASSETS
                         </Button>
-                        <div className={`mt-4 text-[9px] font-semibold tracking-[0.15em] uppercase opacity-60 flex items-center gap-2 ${isDarkMode ? 'text-zinc-400' : 'text-slate-600'}`}>
-                          <Database size={12} /> Total Tokens Required: <span className={isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}>1,240</span>
-                        </div>
                       </div>
                     </div>
                   )}
