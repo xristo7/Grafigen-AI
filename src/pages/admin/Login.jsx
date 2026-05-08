@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { Sparkles, Lock, Mail, UserPlus, LogIn, ChevronRight, Facebook } from "lucide-react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
+import { Sparkles, Lock, Mail, UserPlus, LogIn, ChevronRight, Facebook, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -11,14 +11,14 @@ const FloatingField = ({ icon: Icon, label, value, onChange, type = "text", plac
   return (
     <div className="relative group/field">
       <div className={`absolute left-4 top-1/2 -translate-y-1/2 transition-all duration-300 z-10 ${isFocused || hasValue ? "scale-75 -translate-x-1" : ""}`}>
-        <Icon className={`w-5 h-5 ${isFocused ? "text-indigo-400" : "text-slate-600"}`} />
+        <Icon className={`w-5 h-5 ${isFocused ? "text-indigo-400" : "text-zinc-600"}`} />
       </div>
       
       <label 
         className={`absolute transition-all duration-300 pointer-events-none z-10 uppercase font-black tracking-widest
           ${(isFocused || hasValue) 
             ? "text-[9px] top-2 left-12 text-indigo-400" 
-            : "text-[11px] top-1/2 -translate-y-1/2 left-12 text-slate-500"
+            : "text-[11px] top-1/2 -translate-y-1/2 left-12 text-zinc-500"
           }`}
       >
         {label}
@@ -31,8 +31,8 @@ const FloatingField = ({ icon: Icon, label, value, onChange, type = "text", plac
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         placeholder={isFocused && !hasValue ? placeholder : ""}
-        className={`bg-slate-950/50 border-slate-800 h-16 pl-12 pr-4 pt-5 rounded-2xl focus:ring-indigo-500/50 text-white transition-all text-[16px]
-          ${isFocused ? "border-indigo-500/50 bg-slate-900" : "hover:border-slate-700"}
+        className={`bg-zinc-950/40 border-white/5 h-16 pl-12 pr-4 pt-5 rounded-2xl focus:ring-indigo-500/50 text-white transition-all text-[16px] font-medium shadow-inner
+          ${isFocused ? "border-indigo-500/50 bg-zinc-900/60" : "hover:border-white/10"}
         `}
         required 
       />
@@ -51,7 +51,6 @@ export default function Login({ isAdmin = false, defaultMode = "login" }) {
   useEffect(() => {
     setIsLogin(defaultMode === "login");
     
-    // Sync config from Neon
     fetch('/api/config')
       .then(res => res.json())
       .then(data => {
@@ -63,7 +62,6 @@ export default function Login({ isAdmin = false, defaultMode = "login" }) {
   }, [defaultMode, location.pathname]);
 
   const savedConfig = JSON.parse(localStorage.getItem("grafigen_config") || "{}");
-  const isGoogleEnabled = savedConfig.enableGoogle !== false;
   const isFacebookEnabled = savedConfig.enableFacebook !== false;
 
   const handleSubmit = (e) => {
@@ -83,7 +81,6 @@ export default function Login({ isAdmin = false, defaultMode = "login" }) {
     } else {
       const sessionData = { email, name: name || "User", role: "user" };
       
-      // Persist to Neon
       fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -96,113 +93,116 @@ export default function Login({ isAdmin = false, defaultMode = "login" }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#060b18] flex items-stretch font-sans selection:bg-indigo-500/30 overflow-hidden">
-      {/* Left Column: Form */}
-      <div className="flex-1 flex items-center justify-center p-8 lg:p-16 z-10 bg-slate-950/20 backdrop-blur-sm">
-        <div className="w-full max-w-sm space-y-8">
-          <div className="space-y-2">
-            <h2 className="text-3xl font-black tracking-tight text-white">{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
-            <p className="text-slate-500 text-sm font-medium">{isLogin ? 'Access your creative workspace.' : 'Join the Grafigen network.'}</p>
-          </div>
+    <div className="min-h-screen bg-[#09090b] flex items-center justify-center font-sans selection:bg-indigo-500/30 overflow-hidden relative p-4 lg:p-8">
+      
+      {/* --- BACKGROUND GRADIENT BLOBS --- */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute -top-[10%] -left-[10%] w-[50vw] h-[50vw] rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 opacity-[0.1] blur-[120px] animate-pulse"></div>
+        <div className="absolute top-[40%] -right-[10%] w-[40vw] h-[40vw] rounded-full bg-gradient-to-tl from-fuchsia-600 to-pink-500 opacity-[0.08] blur-[120px]"></div>
+        <div className="absolute -bottom-[10%] left-[20%] w-[35vw] h-[35vw] rounded-full bg-gradient-to-tr from-amber-500 to-yellow-600 opacity-[0.05] blur-[120px]"></div>
+      </div>
 
-          <div className="flex gap-4 p-1 bg-slate-900/50 rounded-2xl border border-slate-800">
-            <button onClick={() => setIsLogin(true)} className={`flex-1 py-3 rounded-xl text-[10px] font-black tracking-widest transition-all ${isLogin ? "bg-indigo-600 text-white shadow-lg" : "text-slate-500 hover:text-slate-300"}`}>LOG IN</button>
-            <button onClick={() => setIsLogin(false)} className={`flex-1 py-3 rounded-xl text-[10px] font-black tracking-widest transition-all ${!isLogin ? "bg-indigo-600 text-white shadow-lg" : "text-slate-500 hover:text-slate-300"}`} disabled={isAdmin}>REGISTER</button>
-          </div>
+      <div className="w-full max-w-xl relative z-10 animate-in fade-in zoom-in duration-700">
+        <div className="flex flex-col items-center mb-10">
+          <Link to="/" className="flex flex-col items-center group">
+            <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-[2rem] flex items-center justify-center shadow-2xl shadow-indigo-500/20 mb-4 group-hover:scale-105 transition-transform duration-500">
+              <Sparkles className="text-white w-8 h-8" />
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="text-2xl font-black tracking-tighter leading-none text-white uppercase">GRAFIGEN</span>
+              <span className="text-[11px] font-black tracking-[0.4em] text-indigo-400 leading-none mt-2 uppercase">Studio</span>
+            </div>
+          </Link>
+        </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && !isAdmin && (
-              <FloatingField 
-                icon={UserPlus}
-                label="Full Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Ex: John Doe"
-              />
-            )}
-            
-            <FloatingField 
-              icon={Mail}
-              label={isAdmin ? "Username / Email" : "Email Address"}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={isAdmin ? "admin" : "creative@grafigen.studio"}
-            />
+        <div className="bg-zinc-900/40 backdrop-blur-3xl border border-white/10 rounded-[40px] overflow-hidden shadow-2xl relative">
+          {/* Subtle reflection overlay */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/0 pointer-events-none"></div>
+          
+          <div className="p-8 lg:p-14 relative z-10">
+            <div className="flex items-center gap-3 mb-10">
+              <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 backdrop-blur-md">
+                {isAdmin ? <ShieldCheck className="w-5 h-5" /> : <LogIn className="w-5 h-5" />}
+              </div>
+              <div>
+                <h2 className="text-xl font-black text-white tracking-tight uppercase leading-none">
+                  {isAdmin ? "Security Control Node" : (isLogin ? "Identity Handshake" : "Initialize Protocol")}
+                </h2>
+                <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1.5">
+                  {isAdmin ? "Superuser Authorization Required" : (isLogin ? "Access your creative workspace" : "Join the high-fidelity network")}
+                </p>
+              </div>
+            </div>
 
-            <div className="space-y-2">
-              <FloatingField 
-                icon={Lock}
-                label="Security Key"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                type="password"
-                placeholder="••••••••"
-              />
-              {isLogin && (
-                <div className="flex justify-end px-1">
-                  <a href="#" className="text-[9px] font-black text-indigo-400 hover:text-indigo-300 uppercase tracking-widest">Forgot Key?</a>
-                </div>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {!isLogin && !isAdmin && (
+                <FloatingField icon={UserPlus} label="Protocol Name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter full identity identifier" />
               )}
-            </div>
+              
+              <FloatingField icon={Mail} label="Access Key (Email)" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="identity@grafigen.studio" />
+              <FloatingField icon={Lock} label="Security Token" value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="••••••••" />
 
-            <Button type="submit" className="w-full h-14 bg-indigo-600 hover:bg-indigo-500 text-white font-black tracking-widest rounded-2xl shadow-xl shadow-indigo-600/20 transition-all group/btn mt-6">
-              {isLogin ? 'INITIALIZE SESSION' : 'CREATE PROTOCOL'}
-              <ChevronRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
-            </Button>
-          </form>
+              <Button 
+                type="submit" 
+                className="w-full h-16 bg-indigo-600 hover:bg-indigo-500 rounded-2xl text-[11px] font-black tracking-[0.2em] uppercase transition-all duration-300 shadow-[0_0_40px_-10px_rgba(99,102,241,0.5)] group mt-4"
+              >
+                {isAdmin ? "AUTHORIZE ACCESS" : (isLogin ? "INITIALIZE SESSION" : "ACTIVATE PROTOCOL")}
+                <ChevronRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </form>
 
-          {(isGoogleEnabled || isFacebookEnabled) && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <div className="h-px flex-1 bg-slate-800" />
-                <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Or continue with</span>
-                <div className="h-px flex-1 bg-slate-800" />
+            {!isAdmin && (
+              <div className="mt-12 space-y-8">
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-white/5"></div>
+                  </div>
+                  <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest">
+                    <span className="bg-transparent px-4 text-zinc-600 backdrop-blur-md">Secure Gateway Tunnels</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4">
+                  {isFacebookEnabled && (
+                    <Button variant="outline" className="h-14 border-white/5 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-black tracking-widest text-[10px] transition-all duration-300 uppercase shadow-inner">
+                      <Facebook className="w-4 h-4 mr-3 text-[#1877F2]" />
+                      Facebook Secure Auth
+                    </Button>
+                  )}
+                </div>
+
+                <div className="flex flex-col items-center gap-4">
+                  <div className="h-px w-12 bg-indigo-500/30"></div>
+                  <p className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest">
+                    {isLogin ? "Need a core identity?" : "Already have protocol access?"}
+                    <button 
+                      onClick={() => setIsLogin(!isLogin)} 
+                      className="ml-2 text-indigo-400 hover:text-indigo-300 underline underline-offset-4 decoration-2 transition-all hover:tracking-widest"
+                    >
+                      {isLogin ? "SIGN UP" : "LOG IN"}
+                    </button>
+                  </p>
+                </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                {isFacebookEnabled && (
-                  <Button variant="outline" className="h-12 border-slate-800 bg-transparent text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl font-bold text-xs">
-                    <Facebook className="w-4 h-4 mr-2 text-[#1877F2]" /> Facebook
-                  </Button>
-                )}
-                {isGoogleEnabled && (
-                  <Button variant="outline" className="h-12 border-slate-800 bg-transparent text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl font-bold text-xs">
-                    <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor"><path d="M12.48 10.92v3.28h7.84c-.24 1.84-2.12 5.4-7.84 5.4-4.96 0-9-4.12-9-9.2s4.04-9.2 9-9.2c2.84 0 4.76 1.2 5.8 2.2l2.6-2.6C18.88 1.12 15.96 0 12.48 0 5.48 0 0 5.48 0 12.48s5.48 12.48 12.48 12.48c7.28 0 12.04-5.12 12.04-12.24 0-.84-.08-1.48-.24-2.16h-11.8z"/></svg>
-                    Google
-                  </Button>
-                )}
-              </div>
-            </div>
-          )}
+            )}
+          </div>
+        </div>
+
+        <div className="mt-12 flex flex-wrap justify-center gap-x-12 gap-y-4 text-[10px] font-black text-zinc-700 uppercase tracking-[0.2em]">
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+            <span>Security Node: Active</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
+            <span>AES-256 Encryption</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-purple-500"></div>
+            <span>Vercel Edge Gateway</span>
+          </div>
         </div>
       </div>
-
-      {/* Right Column: Branding */}
-      <div className="hidden lg:flex flex-1 relative items-center justify-center overflow-hidden bg-slate-900 border-l border-slate-800">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 to-purple-600/20" />
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/10 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-500/10 blur-[120px] rounded-full translate-y-1/2 -translate-x-1/2" />
-        
-        <div className="relative text-center z-10 space-y-6">
-          <div className="inline-flex w-24 h-24 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-[2.5rem] items-center justify-center shadow-3xl shadow-indigo-500/40 animate-bounce-subtle">
-            <Sparkles className="text-white w-12 h-12" />
-          </div>
-          <div className="space-y-2">
-            <h1 className="text-7xl font-black tracking-[ -0.05em] text-white leading-none">GRAFIGEN</h1>
-            <p className="text-indigo-400 font-bold tracking-[0.4em] text-lg uppercase">Studio</p>
-          </div>
-          <p className="text-slate-400 font-bold uppercase tracking-[0.3em] text-[10px] opacity-60">
-            Creative Member Access
-          </p>
-        </div>
-      </div>
-
-      <style>{`
-        @keyframes bounce-subtle {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-15px); }
-        }
-        .animate-bounce-subtle { animation: bounce-subtle 4s ease-in-out infinite; }
-      `}</style>
     </div>
   );
 }

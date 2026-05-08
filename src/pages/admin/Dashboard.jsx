@@ -42,38 +42,38 @@ export default function Dashboard() {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-black tracking-tight text-white">System Dashboard</h1>
-        <p className="text-slate-500 font-medium">Real-time overview of Grafigen Studio performance.</p>
+        <p className="text-zinc-500 font-medium">Real-time overview of Grafigen Studio performance.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, i) => (
-          <Card key={i} className="bg-slate-900 border-slate-800 p-6 rounded-2xl">
+          <Card key={i} className="bg-zinc-900/20 backdrop-blur-md border border-white/5 p-6 rounded-2xl shadow-2xl">
             <div className="flex items-start justify-between">
-              <div className="p-3 rounded-xl bg-slate-800 border border-slate-700">
+              <div className="p-3 rounded-xl bg-zinc-900 border border-white/5 shadow-inner">
                 {stat.icon}
               </div>
-              <span className={`text-[10px] font-black tracking-widest px-2 py-1 rounded-full ${stat.trend.startsWith('+') ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+              <span className={`text-[10px] font-black tracking-widest px-2 py-1 rounded-full ${stat.trend.startsWith('+') ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
                 {stat.trend}
               </span>
             </div>
             <div className="mt-4">
-              <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500">{stat.label}</p>
-              <h2 className="text-2xl font-black text-white mt-1">{stat.value}</h2>
+              <p className="text-[10px] uppercase tracking-[0.2em] font-black text-zinc-500">{stat.label}</p>
+              <h2 className="text-2xl font-black text-white mt-1 tracking-tight">{stat.value}</h2>
             </div>
           </Card>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 bg-slate-900 border-slate-800 p-8 rounded-2xl">
+        <Card className="lg:col-span-2 bg-zinc-900/20 backdrop-blur-md border border-white/5 p-8 rounded-2xl shadow-2xl">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
               <BarChart3 className="w-5 h-5 text-indigo-400" />
               <h3 className="font-black text-sm uppercase tracking-widest">Generation Activity</h3>
             </div>
             <div className="flex gap-2">
-              <div className="px-3 py-1 rounded-full bg-slate-800 text-[10px] font-black text-slate-400 border border-slate-700">7 Days</div>
-              <div className="px-3 py-1 rounded-full bg-indigo-600 text-[10px] font-black text-white border border-indigo-500">30 Days</div>
+              <div className="px-3 py-1 rounded-full bg-zinc-900 text-[10px] font-black text-zinc-500 border border-white/5">7 Days</div>
+              <div className="px-3 py-1 rounded-full bg-indigo-600 text-[10px] font-black text-white border border-indigo-500 shadow-lg shadow-indigo-600/20">30 Days</div>
             </div>
           </div>
           
@@ -84,26 +84,26 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        <Card className="bg-slate-900 border-slate-800 p-8 rounded-2xl">
+        <Card className="bg-zinc-900/20 backdrop-blur-md border border-white/5 p-8 rounded-2xl shadow-2xl">
           <div className="flex items-center gap-3 mb-8">
             <TrendingUp className="w-5 h-5 text-purple-400" />
             <h3 className="font-black text-sm uppercase tracking-widest">Recent Access</h3>
           </div>
           <div className="space-y-6">
             {recentUsers.length === 0 ? (
-              <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest text-center py-4">No recent activity detected.</p>
+              <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest text-center py-4">No recent activity detected.</p>
             ) : recentUsers.map((user, i) => (
-              <div key={i} className="flex items-center justify-between group cursor-pointer">
+              <div key={i} className="flex items-center justify-between group cursor-pointer p-2 -mx-2 rounded-xl hover:bg-white/5 transition-all">
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center group-hover:border-indigo-500/50 transition-colors">
-                    <ArrowUpRight className="w-4 h-4 text-slate-500 group-hover:text-indigo-400" />
+                  <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-white/5 flex items-center justify-center group-hover:border-indigo-500/50 transition-colors shadow-inner">
+                    <ArrowUpRight className="w-4 h-4 text-zinc-500 group-hover:text-indigo-400" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-white">{user.name}</p>
-                    <p className="text-[10px] font-medium text-slate-500">{user.role}</p>
+                    <p className="text-sm font-black text-white tracking-tight leading-tight">{user.name}</p>
+                    <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">{user.role}</p>
                   </div>
                 </div>
-                <span className="text-[10px] font-black text-slate-600">
+                <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">
                   {new Date(user.last_login).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
