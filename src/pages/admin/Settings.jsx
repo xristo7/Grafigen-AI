@@ -94,6 +94,14 @@ export default function Settings() {
                 <Input type="password" value={config.apiSecret} onChange={(e) => setConfig({...config, apiSecret: e.target.value})} className="bg-slate-950/50 border-slate-800 h-12 rounded-xl focus:ring-indigo-500/50 text-white font-medium" />
               </div>
             </div>
+
+            <div className="mt-8 p-4 rounded-xl bg-amber-500/5 border border-amber-500/10 flex items-start gap-4">
+              <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+              <p className="text-[11px] font-medium text-slate-400 leading-relaxed">
+                <strong className="text-amber-500 uppercase tracking-widest block mb-1">Critical: Unsigned Uploads</strong>
+                Your Cloudinary Upload Preset MUST be set to <strong>"Unsigned"</strong> in your Cloudinary Dashboard (Settings &gt; Upload &gt; Upload presets). If it is "Signed", uploads will fail from the client side.
+              </p>
+            </div>
           </Card>
 
           {/* Social Authentication Settings */}

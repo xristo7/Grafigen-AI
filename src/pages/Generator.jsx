@@ -146,6 +146,7 @@ export default function FlyerPromptGenerator() {
     const savedConfig = JSON.parse(localStorage.getItem("grafigen_config") || "{}");
     const cloudName = savedConfig.cloudName || import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "daou85ugm";
     const uploadPreset = savedConfig.uploadPreset || import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "ml_default";
+    console.log("Initializing Cloudinary Widget with:", { cloudName, uploadPreset });
 
     const widget = window.cloudinary.createUploadWidget(
       {
@@ -173,7 +174,12 @@ export default function FlyerPromptGenerator() {
         }
       },
       (error, result) => {
-        if (!error && result && result.event === "success") {
+        if (error) {
+          console.error("Cloudinary Widget Error:", error);
+          alert("Upload failed: " + (error.message || "Unknown error"));
+          return;
+        }
+        if (result && result.event === "success") {
           const url = result.info.secure_url;
           if (subjectName) {
             setForm(prev => ({
@@ -221,86 +227,73 @@ export default function FlyerPromptGenerator() {
   };
 
   const generatePrompt = () => {
-    const secondaryList = [...(form.secondarySubjects || []), form.customSecondary].filter(Boolean).join(", ");
-    
-    // 1. Design Type & Theme
-    const designTypes = {
-      Birthday: "High-end Cinematic Event Poster",
-      Wedding: "Elegant Premium Wedding Stationery",
-      Anniversary: "Luxury Celebration Commemorative Flyer",
-      Dedication: "Soft Glow Inspirational Religious Flyer",
-      Award: "Corporate Excellence Recognition Poster"
+    // 1. Image References (Conditioning)
+    let conditioningSection = "";
+    if (form.primaryPortraitUrl) {
+      conditioningSection += `PRIMARY REFERENCE IMAGE (Facial Identity):\n${form.primaryPortraitUrl}\n\n`;
+    }
+    if (form.lifestyleActionUrl) {
+      conditioningSection += `STYLE/ACTION REFERENCE (Composition):\n${form.lifestyleActionUrl}\n\n`;
+    }
+
+    const moodMap = {
+      Birthday: "Vibrant, joyful, luxurious, and uplifting.",
+      Wedding: "Romantic, pure, sophisticated, and timeless.",
+      Anniversary: "Warm, grateful, classy, and intimate.",
+      Dedication: "Spiritual, ethereal, inspirational, and calm.",
+      Award: "Powerful, prestigious, clean, and professional."
     };
-    const designType = designTypes[form.eventType] || "Professional Graphic Design Flyer";
-    
-    // 2. Subject Description
+
+    const lightingMap = {
+      "Modern Premium": "Cinematic soft glow, studio backlighting, atmospheric depth.",
+      "Minimalist": "Soft diffused natural light, clean shadows, high-key lighting.",
+      "Vibrant": "Dynamic colorful highlights, high-contrast glow, neon accents.",
+      "Classic": "Warm golden hour glow, soft vignettes, classic Rembrandt lighting."
+    };
+
+    // 2. Main Subject Description
     let subjectDesc = "";
     if (form.eventType === "Wedding" && form.separateNames) {
-      subjectDesc = `A professional portrait of a couple (${form.brideName} and ${form.groomName}), looking elegant and joyful.`;
-      if (form.primaryPortraitUrl) subjectDesc += ` [REFERENCE IMAGE: ${form.primaryPortraitUrl}]`;
+      subjectDesc = `Create a high-end cinematic ${form.cardType.toLowerCase()} poster using the PRIMARY REFERENCE as the exact facial identity for the couple (${form.brideName} and ${form.groomName}).`;
     } else {
-      subjectDesc = `A high-detail focal portrait of ${form.primaryName || "the main subject"}.`;
-      if (form.primaryPortraitUrl) subjectDesc += ` [REFERENCE IMAGE: ${form.primaryPortraitUrl}]`;
+      subjectDesc = `Create a high-end cinematic ${form.cardType.toLowerCase()} poster using the PRIMARY REFERENCE as the exact facial identity reference for ${form.primaryName || "the main subject"}.`;
     }
     
+    subjectDesc += `\n\nPreserve the exact face, skin tone, hairstyle, and likeness from the identity reference. Do not redesign or alter the facial structure. Maintain likeness accuracy.`;
+
     if (form.showCelebrantSecondary && form.lifestyleActionUrl) {
-      subjectDesc += ` Including a lifestyle action scene [REFERENCE IMAGE: ${form.lifestyleActionUrl}].`;
+      subjectDesc += `\n\nUse the STYLE/ACTION REFERENCE only for composition inspiration and lifestyle action posing.`;
     }
 
+    const secondaryList = [...(form.secondarySubjects || []), form.customSecondary].filter(Boolean).join(", ");
     if (secondaryList) {
-      const subjectsWithUrls = form.secondarySubjects.map(s => {
-        const url = form.subjectUrls[s];
-        return url ? `${s} [REFERENCE IMAGE: ${url}]` : s;
-      }).join(", ");
-      subjectDesc += ` Style including: ${subjectsWithUrls}.`;
-      if (form.customSecondary) subjectDesc += ` Also including ${form.customSecondary}.`;
+      subjectDesc += `\n\nSecondary style elements: ${secondaryList}.`;
     }
     
-    // 3. Mood & Lighting
-    const moodMap = {
-      Birthday: "Vibrant, Joyful, Uplifting",
-      Wedding: "Romantic, Pure, Sophisticated",
-      Anniversary: "Warm, Grateful, Classy",
-      Dedication: "Spiritual, Ethereal, Inspirational",
-      Award: "Powerful, Prestigious, Clean"
-    };
+    const masterPrompt = `${conditioningSection}PROMPT:
+${subjectDesc}
 
-    // 4. Layout & Typography
-    const layoutRules = `Main subject ${form.primaryNamePosition === "Center" ? "centrally framed" : "offset to the " + form.primaryNamePosition}. Text hierarchy is ${form.titleSize === "Massive" ? "dominantly bold" : "balanced"}.`;
-    
-    // 5. Constructing the Master Prompt
-    let prompt = `### PRO-LEVEL MASTER PROMPT: ${form.eventType.toUpperCase()} ###\n\n`;
-    
-    prompt += `DESIGN TYPE: Create a ${designType}.\n`;
-    prompt += `THEME: "${form.title}"\n\n`;
-    
-    prompt += `SUBJECT DESCRIPTION:\n${subjectDesc} Styled as: ${form.showCelebrantSecondary ? "Cinematic lifestyle action" : "Studio portrait"}.\n\n`;
-    
-    prompt += `COLOR SCHEME: Rich palette of ${form.primaryColor} and ${form.secondaryColor} with smooth gradients, light flares, and professional color grading.\n`;
-    prompt += `LIGHTING STYLE: Cinematic soft glow, studio-grade backlighting, depth of field effects, and atmospheric lighting.\n\n`;
-    
-    prompt += `LAYOUT INSTRUCTIONS:\n- ${layoutRules}\n- Title placed at the ${form.titlePosition}.\n- Include visual weight balance between subjects and typography.\n\n`;
-    
-    prompt += `TYPOGRAPHY INSTRUCTIONS:\n- Main Title: "${form.title}" in a ${form.titleSize} professional font.\n- ${form.eventType === "Dedication" ? "Script font accent for key words." : "Modern bold sans-serif hierarchy."}\n- Sub-text: ${form.eventType === "Wedding" ? "Elegant calligraphy" : "Clean geometric fonts"}.\n\n`;
-    
-    prompt += `EXACT TEXT CONTENT:\n`;
-    prompt += `- Headline: "${form.title}"\n`;
-    if (form.eventType === "Wedding" && form.separateNames) {
-      prompt += `- Names: ${form.brideName} & ${form.groomName}\n`;
-    } else {
-      prompt += `- Main Name: ${form.primaryName}\n`;
-    }
-    if (form.cardType === "Invitation") {
-      if (form.showDate) prompt += `- Date: ${form.date}\n`;
-      if (form.showTime) prompt += `- Time: ${form.time}\n`;
-      if (form.showVenue) prompt += `- Venue: ${form.venue}\n`;
-      if (form.showRsvp) prompt += `- RSVP: ${form.rsvpLink}\n`;
-    }
-    
-    prompt += `\nMOOD: ${moodMap[form.eventType] || "Professional"}.\n`;
-    prompt += `QUALITY KEYWORDS: Ultra high resolution, 8k render, sharp focus, clean composition, realistic lighting, professional Photoshop grade, masterpiece quality.`;
+Theme: ${form.title.toUpperCase()}
 
-    return prompt;
+Color Palette:
+${form.primaryColor} and ${form.secondaryColor}
+
+Lighting:
+${lightingMap[form.theme] || lightingMap["Modern Premium"]}
+
+Typography:
+"${form.title}"
+${form.primaryName ? `"${form.primaryName}"` : ""}
+${form.showDate ? `Date: ${form.date}` : ""}
+${form.showVenue ? `Venue: ${form.venue}` : ""}
+
+Mood:
+${moodMap[form.eventType] || moodMap["Birthday"]}
+
+Style:
+${form.theme} aesthetic, ultra-detailed, professional event flyer grade, 8k resolution.`.trim();
+
+    return masterPrompt;
   };
 
   const StepHeader = ({ icon, title }) => (
@@ -550,15 +543,18 @@ export default function FlyerPromptGenerator() {
 
               {tab === "images" && (
                 <div className="space-y-8 animate-in fade-in duration-500">
-                  <StepHeader icon={<ImageIcon className="w-5 h-5" />} title="Subject Images" />
+                  <StepHeader icon={<ImageIcon className="w-5 h-5" />} title="Reference Conditioning" />
                   <div className="space-y-4">
                     {[
-                      { key: 'showPrimaryName', label: 'Primary Portrait', urlKey: 'primaryPortraitUrl' },
-                      { key: 'showCelebrantSecondary', label: 'Lifestyle Action', urlKey: 'lifestyleActionUrl' }
+                      { key: 'showPrimaryName', label: 'Identity Reference (Face)', urlKey: 'primaryPortraitUrl', desc: 'Preserves exact facial likeness' },
+                      { key: 'showCelebrantSecondary', label: 'Style Reference (Action)', urlKey: 'lifestyleActionUrl', desc: 'Composition & posing inspiration' }
                     ].map(row => (
                       <div key={row.key} className="space-y-3">
                         <div className={`flex items-center justify-between p-4 rounded-xl border transition-all ${isDarkMode ? 'bg-indigo-500/5 border-indigo-500/10' : 'bg-slate-50 border-slate-200'}`}>
-                          <span className={`${t.label} ${t.text}`}>{row.label}</span>
+                          <div className="flex flex-col">
+                            <span className={`${t.label} ${t.text}`}>{row.label}</span>
+                            <span className="text-[9px] font-medium text-slate-500 uppercase tracking-wider">{row.desc}</span>
+                          </div>
                           <Switch checked={form[row.key]} onCheckedChange={(v) => handleChange(row.key, v)} />
                         </div>
                         {form[row.key] && (
