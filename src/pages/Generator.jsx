@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Sparkles, 
   Moon, 
@@ -30,7 +31,11 @@ import {
   LogOut,
   Layout,
   CheckCircle2,
-  Zap
+  Zap,
+  Calendar,
+  Clock,
+  Navigation,
+  Link as LinkIcon
 } from "lucide-react";
 
 export default function Generator() {
@@ -208,8 +213,8 @@ export default function Generator() {
       
       {/* --- BACKGROUND BLOBS --- */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute -top-[10%] -left-[10%] w-[50vw] h-[50vw] rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 opacity-[0.1] blur-[120px]" />
-        <div className="absolute top-[50%] -right-[10%] w-[45vw] h-[45vw] rounded-full bg-gradient-to-tl from-amber-400/20 to-yellow-600/10 opacity-[0.12] blur-[120px]" />
+        <div className="absolute -top-[10%] -left-[10%] w-[50vw] h-[50vw] rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 opacity-[0.08] blur-[120px]" />
+        <div className="absolute top-[50%] -right-[10%] w-[45vw] h-[45vw] rounded-full bg-gradient-to-tl from-amber-400/10 to-yellow-600/5 opacity-[0.08] blur-[120px]" />
       </div>
 
       {/* --- SIDEBAR --- */}
@@ -278,6 +283,7 @@ export default function Generator() {
       <main className="flex-1 flex flex-col h-full relative z-10 pt-16 md:pt-0">
         <header className="hidden md:flex h-20 items-center justify-between px-8 border-b border-white/5 bg-zinc-950/40 backdrop-blur-xl z-10">
           <div className="flex items-center gap-4">
+            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="lg:hidden p-1 text-zinc-400 hover:text-white"><Menu size={20} /></button>
             <div className="flex items-center gap-2 text-[10px] font-black tracking-widest text-emerald-400 bg-emerald-400/10 px-3 py-1.5 rounded-full border border-emerald-400/20">
               <div className={`w-1.5 h-1.5 rounded-full ${isAutoSaving ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'}`} />
               {isAutoSaving ? 'SAVING...' : 'AUTO-SAVED'}
@@ -296,7 +302,7 @@ export default function Generator() {
                 </button>
               ))}
             </div>
-            <button className="text-zinc-400 hover:text-white transition-colors p-2 rounded-full hover:bg-white/5">
+            <button onClick={() => setIsDarkMode(!isDarkMode)} className="text-zinc-400 hover:text-white transition-colors p-2 rounded-full hover:bg-white/5">
               {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
           </div>
@@ -308,7 +314,7 @@ export default function Generator() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-2xl bg-zinc-900/80 backdrop-blur-md border border-white/10 flex items-center justify-center shadow-inner">
-                  {tab === "chat" ? <MessageSquare size={24} className="text-indigo-400" /> : <Layout size={24} className="text-indigo-400" />}
+                  {tab === "chat" ? <MessageSquare size={24} className="text-indigo-400" /> : tab === "content" ? <Layout size={24} className="text-indigo-400" /> : tab === "images" ? <ImageIcon size={24} className="text-indigo-400" /> : <Palette size={24} className="text-indigo-400" />}
                 </div>
                 <div>
                   <h1 className="text-2xl font-black tracking-tight uppercase">
@@ -342,7 +348,7 @@ export default function Generator() {
               />
             </div>
 
-            <div className="bg-zinc-900/20 backdrop-blur-md border border-white/5 rounded-[2.5rem] p-1 shadow-2xl">
+            <div className="bg-zinc-900/20 backdrop-blur-md border border-white/5 rounded-[2.5rem] p-1 shadow-2xl overflow-hidden">
               {tab === "chat" && (
                 <div className="p-6 md:p-8 space-y-6">
                   <Textarea 
@@ -363,38 +369,92 @@ export default function Generator() {
               {tab === "content" && (
                 <div className="divide-y divide-white/5">
                   <FormSection label="Main Headline" enabled={form.showTitle} onToggle={(v) => handleChange("showTitle", v)}>
-                    <Input 
-                      value={form.title} 
-                      onChange={e => handleChange("title", e.target.value)}
-                      className="bg-zinc-950/60 border-zinc-800/80 h-12 rounded-xl text-white font-medium"
-                    />
+                    <div className="space-y-4">
+                      <Input value={form.title} onChange={e => handleChange("title", e.target.value)} className="bg-zinc-950/60 border-zinc-800/80 h-12 rounded-xl text-white font-medium" />
+                      <div className="grid grid-cols-2 gap-4">
+                        <SelectField label="Size" value={form.titleSize} options={["Extra Large", "Large", "Medium", "Small"]} onChange={v => handleChange("titleSize", v)} />
+                        <SelectField label="Position" value={form.titlePosition} options={["Lower Third", "Center", "Top", "Overlay"]} onChange={v => handleChange("titlePosition", v)} />
+                      </div>
+                    </div>
                   </FormSection>
                   <FormSection label="Celebrant Name" enabled={form.showName} onToggle={(v) => handleChange("showName", v)}>
-                    <Input 
-                      value={form.primaryName} 
-                      onChange={e => handleChange("primaryName", e.target.value)}
-                      placeholder="Enter name..."
-                      className="bg-zinc-950/60 border-zinc-800/80 h-12 rounded-xl text-white font-medium"
-                    />
+                    <div className="space-y-4">
+                      <Input value={form.primaryName} onChange={e => handleChange("primaryName", e.target.value)} placeholder="Enter name..." className="bg-zinc-950/60 border-zinc-800/80 h-12 rounded-xl text-white font-medium" />
+                      <div className="grid grid-cols-2 gap-4">
+                        <SelectField label="Presence" value={form.primaryNameSize} options={["Large", "Medium", "Subtle"]} onChange={v => handleChange("primaryNameSize", v)} />
+                        <SelectField label="Align" value={form.primaryNamePosition} options={["Center", "Left", "Right"]} onChange={v => handleChange("primaryNamePosition", v)} />
+                      </div>
+                    </div>
                   </FormSection>
+                  <FormSection label="Event Date" enabled={form.showDate} onToggle={(v) => handleChange("showDate", v)}>
+                    <Input type="date" value={form.date} onChange={e => handleChange("date", e.target.value)} className="bg-zinc-950/60 border-zinc-800/80 h-12 rounded-xl text-white font-medium" />
+                  </FormSection>
+                  <FormSection label="Event Time" enabled={form.showTime} onToggle={(v) => handleChange("showTime", v)}>
+                    <Input type="time" value={form.time} onChange={e => handleChange("time", e.target.value)} className="bg-zinc-950/60 border-zinc-800/80 h-12 rounded-xl text-white font-medium" />
+                  </FormSection>
+                  <FormSection label="Venue / Location" enabled={form.showVenue} onToggle={(v) => handleChange("showVenue", v)}>
+                    <Input value={form.venue} onChange={e => handleChange("venue", e.target.value)} placeholder="Address or venue name..." className="bg-zinc-950/60 border-zinc-800/80 h-12 rounded-xl text-white font-medium" />
+                  </FormSection>
+                  <FormSection label="RSVP / Event Link" enabled={form.showRsvp} onToggle={(v) => handleChange("showRsvp", v)}>
+                    <Input value={form.rsvpLink} onChange={e => handleChange("rsvpLink", e.target.value)} placeholder="https://..." className="bg-zinc-950/60 border-zinc-800/80 h-12 rounded-xl text-white font-medium" />
+                  </FormSection>
+                  <div className="p-6 md:p-8">
+                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3 block">Footer Message</label>
+                    <Textarea value={form.footerMessage} onChange={e => handleChange("footerMessage", e.target.value)} className="bg-zinc-950/60 border-zinc-800/80 min-h-[80px] rounded-xl text-white font-medium" />
+                  </div>
                 </div>
               )}
 
               {tab === "images" && (
                 <div className="p-6 md:p-8 space-y-8">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <ImageUploadCard 
-                      label="Identity Reference (Face)" 
-                      url={form.primaryPortraitUrl} 
-                      onUpload={() => handleImageUpload("primaryPortraitUrl")} 
-                      onClear={() => handleChange("primaryPortraitUrl", "")}
-                    />
-                    <ImageUploadCard 
-                      label="Style Reference (Action)" 
-                      url={form.lifestyleActionUrl} 
-                      onUpload={() => handleImageUpload("lifestyleActionUrl")} 
-                      onClear={() => handleChange("lifestyleActionUrl", "")}
-                    />
+                    <ImageUploadCard label="Identity Reference (Face)" url={form.primaryPortraitUrl} onUpload={() => handleImageUpload("primaryPortraitUrl")} onClear={() => handleChange("primaryPortraitUrl", "")} />
+                    <ImageUploadCard label="Style Reference (Action)" url={form.lifestyleActionUrl} onUpload={() => handleImageUpload("lifestyleActionUrl")} onClear={() => handleChange("lifestyleActionUrl", "")} />
+                  </div>
+                  <div className="pt-6 border-t border-white/5 space-y-4">
+                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Secondary Subjects</label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {["Family", "Friends", "Partner", "Colleagues"].map(subj => (
+                        <button key={subj} onClick={() => {
+                          const exist = form.secondarySubjects.includes(subj);
+                          handleChange('secondarySubjects', exist ? form.secondarySubjects.filter(s => s !== subj) : [...form.secondarySubjects, subj]);
+                        }} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${form.secondarySubjects.includes(subj) ? 'bg-indigo-600 border-indigo-400 text-white' : 'bg-zinc-900 border-white/5 text-zinc-500 hover:text-zinc-300'}`}>
+                          {subj}
+                        </button>
+                      ))}
+                    </div>
+                    <Input placeholder="Custom secondary subjects..." value={form.customSecondary} onChange={e => handleChange('customSecondary', e.target.value)} className="bg-zinc-950/60 border-zinc-800/80 h-11 rounded-xl text-white text-xs font-medium" />
+                  </div>
+                </div>
+              )}
+
+              {tab === "style" && (
+                <div className="divide-y divide-white/5">
+                  <div className="p-6 md:p-8 space-y-4">
+                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Visual Theme</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {["Modern Premium", "Minimalist", "Vibrant", "Classic"].map(t => (
+                        <button key={t} onClick={() => handleChange('theme', t)} className={`p-4 rounded-2xl text-left border transition-all ${form.theme === t ? 'bg-indigo-600 border-indigo-400 text-white' : 'bg-zinc-900 border-white/5 text-zinc-500 hover:text-zinc-300'}`}>
+                          <p className="text-xs font-black uppercase tracking-widest">{t}</p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="p-6 md:p-8 grid grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Primary Color</label>
+                      <div className="flex gap-3">
+                        <input type="color" value={form.primaryColor} onChange={e => handleChange('primaryColor', e.target.value)} className="w-12 h-12 rounded-xl bg-transparent border-0 cursor-pointer overflow-hidden" />
+                        <Input value={form.primaryColor} onChange={e => handleChange('primaryColor', e.target.value)} className="flex-1 bg-zinc-950/60 border-zinc-800/80 h-12 rounded-xl text-white font-mono text-xs" />
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Secondary Color</label>
+                      <div className="flex gap-3">
+                        <input type="color" value={form.secondaryColor} onChange={e => handleChange('secondaryColor', e.target.value)} className="w-12 h-12 rounded-xl bg-transparent border-0 cursor-pointer overflow-hidden" />
+                        <Input value={form.secondaryColor} onChange={e => handleChange('secondaryColor', e.target.value)} className="flex-1 bg-zinc-950/60 border-zinc-800/80 h-12 rounded-xl text-white font-mono text-xs" />
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -426,8 +486,10 @@ export default function Generator() {
           <div className="bg-zinc-900/40 backdrop-blur-sm border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
             <SummaryRow label="Event" value={form.eventType} />
             <SummaryRow label="Type" value={form.cardType} />
-            <SummaryRow label="Title" value={form.title} highlight />
-            <SummaryRow label="Ref Images" value={ (form.primaryPortraitUrl ? 1 : 0) + (form.lifestyleActionUrl ? 1 : 0) } />
+            <SummaryRow label="Headline" value={form.title} highlight />
+            <SummaryRow label="Celebrant" value={form.primaryName} />
+            <SummaryRow label="Inclusions" value={form.secondarySubjects.join(', ') + (form.customSecondary ? `, ${form.customSecondary}` : '')} />
+            <SummaryRow label="Theme" value={form.theme} />
           </div>
 
           <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 backdrop-blur-md">
@@ -452,28 +514,14 @@ export default function Generator() {
 }
 
 const NavItem = ({ icon, label, active, onClick, style="default" }) => (
-  <button 
-    onClick={onClick}
-    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
-      active 
-        ? style === "default" ? "bg-indigo-600 text-white shadow-xl shadow-indigo-500/20" : "bg-zinc-800 text-white border border-white/5"
-        : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5"
-    }`}
-  >
+  <button onClick={onClick} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${active ? style === "default" ? "bg-indigo-600 text-white shadow-xl shadow-indigo-500/20" : "bg-zinc-800 text-white border border-white/5" : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5"}`}>
     <div className={active ? "text-white" : "text-zinc-600"}>{icon}</div>
     {label}
   </button>
 );
 
 const ModeCard = ({ active, onClick, icon, label, sub }) => (
-  <button 
-    onClick={onClick}
-    className={`relative p-5 rounded-3xl flex items-start gap-4 text-left transition-all duration-300 ${
-      active 
-        ? 'bg-indigo-500/10 border border-indigo-500/30 shadow-2xl' 
-        : 'bg-zinc-900/40 border border-white/5 hover:bg-zinc-900/60'
-    }`}
-  >
+  <button onClick={onClick} className={`relative p-5 rounded-3xl flex items-start gap-4 text-left transition-all duration-300 ${active ? 'bg-indigo-500/10 border border-indigo-500/30 shadow-2xl' : 'bg-zinc-900/40 border border-white/5 hover:bg-zinc-900/60'}`}>
     <div className={`p-3 rounded-2xl ${active ? 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-500'}`}>{icon}</div>
     <div>
       <h3 className={`font-black tracking-tight ${active ? 'text-white' : 'text-zinc-400'}`}>{label}</h3>
@@ -491,6 +539,18 @@ const FormSection = ({ label, enabled, onToggle, children }) => (
     </div>
     <div className={`transition-all duration-300 ${!enabled ? 'opacity-30 pointer-events-none' : ''}`}>
       {children}
+    </div>
+  </div>
+);
+
+const SelectField = ({ label, value, options, onChange }) => (
+  <div>
+    <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-2 block">{label}</label>
+    <div className="relative">
+      <select value={value} onChange={e => onChange(e.target.value)} className="w-full appearance-none bg-zinc-950/60 border border-zinc-800/80 rounded-xl px-4 py-3 text-sm text-white font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all cursor-pointer">
+        {options.map(opt => <option key={opt}>{opt}</option>)}
+      </select>
+      <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
     </div>
   </div>
 );
@@ -520,6 +580,6 @@ const ImageUploadCard = ({ label, url, onUpload, onClear }) => (
 const SummaryRow = ({ label, value, highlight }) => (
   <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 last:border-0">
     <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">{label}</span>
-    <span className={`text-xs font-bold ${highlight ? 'text-indigo-400' : 'text-zinc-300'}`}>{value || "---"}</span>
+    <span className={`text-sm font-bold text-right truncate max-w-[140px] ${highlight ? 'text-indigo-400' : 'text-zinc-300'}`}>{value || "---"}</span>
   </div>
 );
