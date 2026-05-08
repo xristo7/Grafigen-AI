@@ -102,19 +102,6 @@ export default function FlyerPromptGenerator() {
     primaryNamePosition: "Center"
   });
 
-  const [credits, setCredits] = useState(0);
-  const user = JSON.parse(localStorage.getItem("user_session") || "{}");
-
-  useEffect(() => {
-    const savedCredits = localStorage.getItem("grafigen_credits");
-    if (savedCredits === null) {
-      localStorage.setItem("grafigen_credits", "10");
-      setCredits(10);
-    } else {
-      setCredits(parseInt(savedCredits));
-    }
-  }, []);
-
   // Load Progress on Mount
   useEffect(() => {
     const savedProgress = localStorage.getItem("grafigen_user_progress");
@@ -312,13 +299,6 @@ export default function FlyerPromptGenerator() {
       subjectDesc += `\n\nSecondary style elements: ${secondaryList}.`;
     }
     
-    const currentCredits = parseInt(localStorage.getItem("grafigen_credits") || "0");
-    if (currentCredits <= 0) {
-      alert("Insufficient credits. Please refill your account.");
-      navigate("/profile");
-      return;
-    }
-
     const masterPrompt = `${conditioningSection}PROMPT:
 ${subjectDesc}
 
@@ -342,13 +322,7 @@ ${moodMap[form.eventType] || moodMap["Birthday"]}
 Style:
 ${form.theme} aesthetic, ultra-detailed, professional event flyer grade, 8k resolution.`.trim();
 
-    // Deduct Credit
-    const nextCredits = currentCredits - 1;
-    localStorage.setItem("grafigen_credits", nextCredits.toString());
-    setCredits(nextCredits);
-
-    setGeneratedPrompt(masterPrompt);
-    setIsPromptGenerated(true);
+    return masterPrompt;
   };
 
   const StepHeader = ({ icon, title }) => (
@@ -393,7 +367,7 @@ ${form.theme} aesthetic, ultra-detailed, professional event flyer grade, 8k reso
   return (
     <div className={`h-screen flex flex-col transition-colors duration-300 ${t.bg} font-sans overflow-hidden relative`}>
       {/* Mobile Drawer — sits behind, revealed by push */}
-      {isSidebarOpen && <aside className={`fixed left-0 top-0 h-full w-[280px] z-30 lg:hidden ${isDarkMode ? 'bg-slate-950 border-r border-slate-800' : 'bg-white border-r border-slate-200'} p-6 overflow-y-auto custom-scrollbar`}>
+      {isSidebarOpen && <aside className={`fixed left-0 top-0 h-full w-[280px] z-30 lg:hidden ${isDarkMode ? 'bg-slate-950 border-r border-slate-800' : 'bg-white border-r border-slate-200'} p-6 overflow-y-auto custom-scrollbar flex flex-col`}>
         <div className="space-y-8">
           {/* Theme Toggle — Mobile Only */}
           <div className="flex items-center justify-between">
@@ -419,30 +393,28 @@ ${form.theme} aesthetic, ultra-detailed, professional event flyer grade, 8k reso
               </button>
             ))}
           </div>
-        </div>
 
-        {/* User Sidebar Footer */}
-        <div className={`mt-auto pt-6 border-t ${isDarkMode ? 'border-slate-800' : 'border-slate-200'} space-y-4`}>
-          <div className="flex items-center gap-3 px-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-xs font-black text-indigo-400">
-              {user.name?.charAt(0)}
-            </div>
-            <div className="min-w-0">
-              <p className={`text-xs font-black truncate ${t.text}`}>{user.name}</p>
-              <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{credits} Credits Left</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <Link to="/profile" className="w-full">
-              <Button variant="outline" className={`w-full h-10 rounded-xl text-[9px] font-black uppercase tracking-widest ${isDarkMode ? 'border-slate-800 hover:bg-slate-800' : 'border-slate-200 hover:bg-slate-100'}`}>Profile</Button>
-            </Link>
-            <Button 
-              variant="outline" 
-              onClick={() => { localStorage.removeItem("user_session"); navigate("/login"); }}
-              className="h-10 rounded-xl text-[9px] font-black uppercase tracking-widest text-red-400 border-red-500/10 hover:bg-red-500/10 hover:text-red-300"
-            >
-              Logout
-            </Button>
+          <div className="mt-auto pt-8 border-t border-slate-800/50">
+            {localStorage.getItem("user_session") ? (
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-indigo-500/5 border border-indigo-500/10">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-sm font-black text-white shadow-lg shadow-indigo-600/20">
+                    {JSON.parse(localStorage.getItem("user_session")).name.charAt(0)}
+                  </div>
+                  <div className="flex flex-col">
+                    <span className={`text-xs font-black tracking-tight ${t.text}`}>{JSON.parse(localStorage.getItem("user_session")).name}</span>
+                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Active Member</span>
+                  </div>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => { localStorage.removeItem("user_session"); window.location.reload(); }} className="text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-xl">
+                  <LogOut className="w-4 h-4" />
+                </Button>
+              </div>
+            ) : (
+              <Link to="/login" className="w-full">
+                <Button variant="outline" className={`w-full h-12 rounded-xl text-[10px] font-black tracking-widest ${isDarkMode ? 'border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800' : 'border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50'}`}>LOGIN TO ACCOUNT</Button>
+              </Link>
+            )}
           </div>
         </div>
       </aside>}
@@ -470,16 +442,19 @@ ${form.theme} aesthetic, ultra-detailed, professional event flyer grade, 8k reso
             </div>
 
             <div className={`flex ${isDarkMode ? 'bg-slate-800/50' : 'bg-slate-200'} p-1 rounded-full border ${isDarkMode ? 'border-slate-700' : 'border-slate-300'}`}>
-              <Button variant="ghost" size="icon" onClick={() => setIsDarkMode(!isDarkMode)} className={`rounded-full w-8 h-8 md:w-9 md:h-9 transition-all ${isDarkMode ? 'hover:bg-white/10' : 'hover:bg-slate-900/10'}`}>
-                {isDarkMode ? <Sun className="w-4 h-4 text-white" /> : <Moon className="w-4 h-4 text-slate-600" />}
-              </Button>
+              {["Simple", "Pro"].map(m => (
+                <button key={m} onClick={() => { setGlobalMode(m); setTab(m === "Simple" ? "chat" : "content"); }} className={`px-3 md:px-5 py-1.5 rounded-full text-[10px] md:text-xs font-black transition-all ${globalMode === m ? "bg-indigo-600 text-white shadow-lg" : "text-slate-500"}`}>{m}</button>
+              ))}
             </div>
+
+            {/* Theme toggle — desktop only in header */}
+            <Button variant="ghost" size="icon" onClick={() => setIsDarkMode(!isDarkMode)} className={`hidden md:flex rounded-full w-9 h-9 md:w-11 md:h-11 transition-all ${isDarkMode ? 'hover:bg-white/10' : 'hover:bg-slate-900/10'}`}>{isDarkMode ? <Sun className="w-4 h-4 md:w-5 md:h-5 text-white" /> : <Moon className="w-4 h-4 md:w-5 md:h-5 text-slate-600" />}</Button>
           </div>
         </header>
 
         <main className="flex-1 overflow-hidden grid lg:grid-cols-[240px_1fr_1fr] relative">
           {/* Desktop Sidebar */}
-          <aside className="hidden lg:block p-6 overflow-y-auto custom-scrollbar">
+          <aside className="hidden lg:flex flex-col p-6 overflow-y-auto custom-scrollbar">
             <div className="space-y-10">
               <div className="space-y-3">
                 <p className={`${t.label} px-3`}>Workflow</p>
@@ -500,6 +475,29 @@ ${form.theme} aesthetic, ultra-detailed, professional event flyer grade, 8k reso
                   </button>
                 ))}
               </div>
+            </div>
+
+            <div className="mt-auto pt-10 border-t border-slate-800/50">
+              {localStorage.getItem("user_session") ? (
+                <div className="flex items-center justify-between p-4 rounded-[2rem] bg-indigo-500/5 border border-indigo-500/10 group/user">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center text-lg font-black text-white shadow-xl shadow-indigo-600/20 group-hover/user:scale-110 transition-transform">
+                      {JSON.parse(localStorage.getItem("user_session")).name.charAt(0)}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className={`text-sm font-black tracking-tight ${t.text}`}>{JSON.parse(localStorage.getItem("user_session")).name}</span>
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Active Member</span>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="icon" onClick={() => { localStorage.removeItem("user_session"); window.location.reload(); }} className="text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-2xl">
+                    <LogOut className="w-5 h-5" />
+                  </Button>
+                </div>
+              ) : (
+                <Link to="/login" className="w-full">
+                  <Button variant="outline" className={`w-full h-14 rounded-2xl text-[10px] font-black tracking-widest ${isDarkMode ? 'border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800' : 'border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50'}`}>LOGIN TO ACCOUNT</Button>
+                </Link>
+              )}
             </div>
           </aside>
 
