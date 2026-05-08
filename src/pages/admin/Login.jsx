@@ -4,6 +4,42 @@ import { Sparkles, Lock, Mail, UserPlus, LogIn, ChevronRight, Facebook } from "l
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+const FloatingField = ({ icon: Icon, label, value, onChange, type = "text", placeholder, isAdmin }) => {
+  const [isFocused, setIsFocused] = useState(false);
+  const hasValue = value && value.length > 0;
+
+  return (
+    <div className="relative group/field">
+      <div className={`absolute left-4 top-1/2 -translate-y-1/2 transition-all duration-300 z-10 ${isFocused || hasValue ? "scale-75 -translate-x-1" : ""}`}>
+        <Icon className={`w-5 h-5 ${isFocused ? "text-indigo-400" : "text-slate-600"}`} />
+      </div>
+      
+      <label 
+        className={`absolute transition-all duration-300 pointer-events-none z-10 uppercase font-black tracking-widest
+          ${(isFocused || hasValue) 
+            ? "text-[8px] top-2 right-4 text-indigo-400 translate-y-0" 
+            : "text-[10px] top-1/2 -translate-y-1/2 left-12 text-slate-500"
+          }`}
+      >
+        {label}
+      </label>
+
+      <Input 
+        type={type}
+        value={value}
+        onChange={onChange}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        placeholder={isFocused && !hasValue ? placeholder : ""}
+        className={`bg-slate-950/50 border-slate-800 h-14 pl-12 pr-4 pt-4 rounded-2xl focus:ring-indigo-500/50 text-white transition-all
+          ${isFocused ? "border-indigo-500/50 bg-slate-900" : "hover:border-slate-700"}
+        `}
+        required 
+      />
+    </div>
+  );
+};
+
 export default function Login({ isAdmin = false, defaultMode = "login" }) {
   const [isLogin, setIsLogin] = useState(defaultMode === "login");
   const [email, setEmail] = useState("");
@@ -12,10 +48,9 @@ export default function Login({ isAdmin = false, defaultMode = "login" }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Load social settings from admin config
   const savedConfig = JSON.parse(localStorage.getItem("grafigen_config") || "{}");
-  const isGoogleEnabled = savedConfig.enableGoogle !== false; // Default enabled
-  const isFacebookEnabled = savedConfig.enableFacebook !== false; // Default enabled
+  const isGoogleEnabled = savedConfig.enableGoogle !== false;
+  const isFacebookEnabled = savedConfig.enableFacebook !== false;
 
   useEffect(() => {
     setIsLogin(defaultMode === "login");
@@ -23,13 +58,8 @@ export default function Login({ isAdmin = false, defaultMode = "login" }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
     if (isAdmin) {
-      const SUPER_ADMIN = {
-        username: "admin",
-        password: "Adromex@7"
-      };
-
+      const SUPER_ADMIN = { username: "admin", password: "Adromex@7" };
       if (isLogin) {
         if (email === SUPER_ADMIN.username && password === SUPER_ADMIN.password) {
           localStorage.setItem("admin_session", JSON.stringify({ email, name: "Super Admin", role: "admin" }));
@@ -41,9 +71,7 @@ export default function Login({ isAdmin = false, defaultMode = "login" }) {
         alert("Registration is disabled for administrative accounts.");
       }
     } else {
-      // User authentication logic
-      const sessionData = { email, name: name || "User", role: "user" };
-      localStorage.setItem("user_session", JSON.stringify(sessionData));
+      localStorage.setItem("user_session", JSON.stringify({ email, name: name || "User", role: "user" }));
       navigate("/");
     }
   };
@@ -55,7 +83,10 @@ export default function Login({ isAdmin = false, defaultMode = "login" }) {
           <div className="inline-flex w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl items-center justify-center shadow-2xl shadow-indigo-500/20 mb-6 animate-bounce-subtle">
             <Sparkles className="text-white w-8 h-8" />
           </div>
-          <h1 className="text-4xl font-black tracking-tighter text-white mb-2">GRAFIGEN <span className="text-indigo-400">STUDIO</span></h1>
+          <div className="flex flex-col items-center gap-1 mb-2">
+            <h1 className="text-5xl font-black tracking-tighter text-white leading-none">GRAFIGEN</h1>
+            <span className="text-indigo-400 font-bold tracking-[0.3em] text-xs uppercase">Studio</span>
+          </div>
           <p className="text-slate-500 font-bold uppercase tracking-[0.2em] text-[10px]">
             {isAdmin ? "Administrative Access Protocol" : "Creative Member Access"}
           </p>
@@ -69,37 +100,42 @@ export default function Login({ isAdmin = false, defaultMode = "login" }) {
             <button onClick={() => setIsLogin(false)} className={`flex-1 py-3 rounded-xl text-xs font-black transition-all ${!isLogin ? "bg-indigo-600 text-white shadow-lg" : "text-slate-500 hover:text-slate-300"}`} disabled={isAdmin}>REGISTER</button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && !isAdmin && (
-              <div className="space-y-2">
-                <label className="text-[10px] uppercase font-black tracking-widest text-slate-500 ml-1">Full Name</label>
-                <div className="relative">
-                  <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter your name" className="bg-slate-950/50 border-slate-800 h-12 pl-12 rounded-xl focus:ring-indigo-500/50 text-white" required />
-                  <UserPlus className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-600" />
-                </div>
-              </div>
+              <FloatingField 
+                icon={UserPlus}
+                label="Full Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Ex: John Doe"
+              />
             )}
-            <div className="space-y-2">
-              <label className="text-[10px] uppercase font-black tracking-widest text-slate-500 ml-1">
-                {isAdmin ? "Username / Email" : "Email Address"}
-              </label>
-              <div className="relative">
-                <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder={isAdmin ? "admin" : "creative@grafigen.studio"} className="bg-slate-950/50 border-slate-800 h-12 pl-12 rounded-xl focus:ring-indigo-500/50 text-white" required />
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-600" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center px-1">
-                <label className="text-[10px] uppercase font-black tracking-widest text-slate-500">Security Key</label>
-                {isLogin && <a href="#" className="text-[10px] font-black text-indigo-400 hover:text-indigo-300">FORGOT?</a>}
-              </div>
-              <div className="relative">
-                <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="bg-slate-950/50 border-slate-800 h-12 pl-12 rounded-xl focus:ring-indigo-500/50 text-white" required />
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-600" />
-              </div>
+            
+            <FloatingField 
+              icon={Mail}
+              label={isAdmin ? "Username / Email" : "Email Address"}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder={isAdmin ? "admin" : "creative@grafigen.studio"}
+            />
+
+            <div className="space-y-1">
+              <FloatingField 
+                icon={Lock}
+                label="Security Key"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                type="password"
+                placeholder="••••••••"
+              />
+              {isLogin && (
+                <div className="flex justify-end px-1">
+                  <a href="#" className="text-[9px] font-black text-indigo-400 hover:text-indigo-300 uppercase tracking-widest">Forgot Key?</a>
+                </div>
+              )}
             </div>
 
-            <Button type="submit" className="w-full h-14 bg-indigo-600 hover:bg-indigo-500 text-white font-black tracking-widest rounded-2xl shadow-xl shadow-indigo-600/20 transition-all group/btn">
+            <Button type="submit" className="w-full h-14 bg-indigo-600 hover:bg-indigo-500 text-white font-black tracking-widest rounded-2xl shadow-xl shadow-indigo-600/20 transition-all group/btn mt-4">
               {isLogin ? 'INITIALIZE SESSION' : 'CREATE PROTOCOL'}
               <ChevronRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
             </Button>

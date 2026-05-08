@@ -407,7 +407,7 @@ ${form.theme} aesthetic, ultra-detailed, professional event flyer grade, 8k reso
             <div className="w-9 h-9 md:w-11 md:h-11 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg md:rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20"><Sparkles className="text-white w-5 h-5 md:w-6 md:h-6" /></div>
             <div className="flex flex-col justify-center h-9 md:h-11">
               <h1 className={`text-base md:text-xl font-black tracking-tighter leading-[1] ${t.text}`}>GRAFIGEN</h1>
-              <p className={`text-[10px] md:text-[13px] font-black tracking-[0.15em] leading-[1] -mt-0.5 ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>STUDIO</p>
+              <p className={`text-[8px] md:text-[10px] font-black tracking-[0.2em] leading-[1] mt-0.5 ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>STUDIO</p>
             </div>
           </div>
           <div className="flex items-center gap-3 md:gap-6">

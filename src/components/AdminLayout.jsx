@@ -41,7 +41,7 @@ export default function AdminLayout({ children }) {
               </div>
               <div className="flex flex-col">
                 <span className="text-sm font-black tracking-tighter leading-none">GRAFIGEN</span>
-                <span className="text-[8px] font-black tracking-[0.2em] text-indigo-400 leading-none mt-1 uppercase">Admin Panel</span>
+                <span className="text-[8px] font-black tracking-[0.2em] text-indigo-400 leading-none mt-1 uppercase">Studio</span>
               </div>
             </Link>
             <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-slate-400 hover:text-white">
