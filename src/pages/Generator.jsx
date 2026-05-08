@@ -45,7 +45,8 @@ import {
   Gem,
   ChevronDown,
   LogOut,
-  Menu
+  Menu,
+  Database
 } from "lucide-react";
 
 const palettes = [
@@ -160,6 +161,14 @@ export default function FlyerPromptGenerator() {
     Award: { icon: <Award className="w-4 h-4" />, presets: [] }
   };
 
+  const eventBackgrounds = {
+    Birthday: "https://images.unsplash.com/photo-1464349153735-7db50ed83c84?q=80&w=2000&auto=format&fit=crop",
+    Wedding: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=2000&auto=format&fit=crop",
+    Anniversary: "https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=2000&auto=format&fit=crop",
+    Dedication: "https://images.unsplash.com/photo-1510076857177-7470076d4098?q=80&w=2000&auto=format&fit=crop",
+    Award: "https://images.unsplash.com/photo-1567942712661-82b9b407abbf?q=80&w=2000&auto=format&fit=crop"
+  };
+
   const t = {
     bg: isDarkMode ? "bg-[#09090b]" : "bg-slate-50",
     text: isDarkMode ? "text-zinc-100" : "text-slate-900",
@@ -168,7 +177,7 @@ export default function FlyerPromptGenerator() {
     input: isDarkMode ? "bg-zinc-950/60 border border-zinc-800/80 text-white focus:ring-indigo-500/50 shadow-inner" : "bg-white border-slate-300 text-slate-800 focus:ring-indigo-500/20",
     buttonPrimary: "bg-indigo-600 hover:bg-indigo-500 text-white font-bold tracking-widest transition-all rounded-xl h-12 md:h-14 px-8 shadow-[0_0_20px_-5px_rgba(99,102,241,0.4)]",
     headerIcon: "p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-sm backdrop-blur-md",
-    label: "text-[10px] uppercase tracking-[0.15em] text-zinc-500 font-black"
+    label: "text-[10px] uppercase tracking-[0.15em] text-zinc-500 font-medium"
   };
 
   const currentPresets = eventConfigs[form.eventType]?.presets || [];
@@ -338,15 +347,14 @@ ${form.theme} aesthetic, ultra-detailed, professional event flyer grade, 8k reso
     return masterPrompt;
   };
 
-  const StepHeader = ({ icon, title }) => (
-    <div className="flex items-center justify-between mb-6 shrink-0 gap-4">
-      <div className="flex items-center gap-3 min-w-0">
+  const StepHeader = ({ icon, title, subtitle }) => (
+    <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center gap-4">
         <div className={t.headerIcon}>{icon}</div>
-        <h2 className={`text-base md:text-lg font-bold tracking-tight truncate ${t.text}`}>{title}</h2>
-      </div>
-      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 shadow-sm backdrop-blur-md shrink-0">
-        {eventConfigs[form.eventType]?.icon}
-        <span className={`${t.label} hidden md:inline`}>{form.eventType}</span>
+        <div>
+          <h3 className={`text-lg font-semibold tracking-tight ${t.text}`}>{title}</h3>
+          {subtitle && <p className={`text-[10px] font-medium uppercase tracking-widest ${t.textMuted}`}>{subtitle}</p>}
+        </div>
       </div>
     </div>
   );
@@ -425,10 +433,10 @@ ${form.theme} aesthetic, ultra-detailed, professional event flyer grade, 8k reso
               <div className="flex items-center justify-between p-3 rounded-2xl bg-indigo-500/5 border border-indigo-500/10">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-sm font-black text-white shadow-lg shadow-indigo-600/20">
-                    {JSON.parse(localStorage.getItem("user_session")).name.charAt(0)}
+                    {(() => { try { return JSON.parse(localStorage.getItem("user_session"))?.name?.charAt(0) || "?"; } catch(e) { return "?"; } })()}
                   </div>
                   <div className="flex flex-col">
-                    <span className={`text-xs font-black tracking-tight ${t.text}`}>{JSON.parse(localStorage.getItem("user_session")).name}</span>
+                    <span className={`text-xs font-black tracking-tight ${t.text}`}>{(() => { try { return JSON.parse(localStorage.getItem("user_session"))?.name || "Guest"; } catch(e) { return "Guest"; } })()}</span>
                     <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Active Member</span>
                   </div>
                 </div>
@@ -508,10 +516,10 @@ ${form.theme} aesthetic, ultra-detailed, professional event flyer grade, 8k reso
                 <div className="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/5 group/user hover:bg-white/10 transition-colors cursor-pointer">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center text-sm font-black shadow-lg">
-                      {JSON.parse(localStorage.getItem("user_session")).name.charAt(0)}
+                      {(() => { try { return JSON.parse(localStorage.getItem("user_session"))?.name?.charAt(0) || "?"; } catch(e) { return "?"; } })()}
                     </div>
                     <div className="flex flex-col min-w-0">
-                      <span className={`text-xs font-black tracking-tight truncate ${t.text}`}>{JSON.parse(localStorage.getItem("user_session")).name}</span>
+                      <span className={`text-xs font-black tracking-tight truncate ${t.text}`}>{(() => { try { return JSON.parse(localStorage.getItem("user_session"))?.name || "Guest"; } catch(e) { return "Guest"; } })()}</span>
                       <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Active Member</span>
                     </div>
                   </div>
@@ -527,9 +535,8 @@ ${form.theme} aesthetic, ultra-detailed, professional event flyer grade, 8k reso
             </div>
           </aside>
 
-        <section className={`flex flex-col overflow-y-auto p-4 md:p-6 lg:p-8 custom-scrollbar ${isPromptGenerated ? 'hidden lg:flex' : 'flex'}`}>
-          <Card className={`${t.card} p-5 md:p-8 border-0 relative rounded-2xl`}>
-            <CardContent className="p-0 space-y-8">
+        <section className={`flex flex-col overflow-y-auto px-[40px] pt-[30px] pb-[60px] lg:px-[80px] lg:pt-8 lg:pb-[100px] no-scrollbar relative z-10 ${isPromptGenerated ? 'hidden lg:flex' : 'flex'}`}>
+          <div className="space-y-12">
               {tab === "chat" && (
                 <div className="space-y-8 animate-in fade-in duration-500">
                   <StepHeader icon={<Sparkles className="w-5 h-5" />} title="Quick Concept" />
@@ -729,56 +736,132 @@ ${form.theme} aesthetic, ultra-detailed, professional event flyer grade, 8k reso
                   </div>
                 </div>
               )}
-            </CardContent>
-          </Card>
+          </div>
         </section>
 
-        <aside className={`flex flex-col overflow-y-auto p-4 md:p-6 lg:p-8 custom-scrollbar ${isPromptGenerated ? 'flex fixed inset-0 z-[60] lg:relative lg:z-auto' : 'hidden lg:flex'} z-20`}>
-          <Card className={`flex-1 border-0 h-full flex flex-col relative rounded-3xl overflow-hidden ${isDarkMode ? 'bg-zinc-950/20 backdrop-blur-2xl shadow-[-10px_0_30px_rgba(0,0,0,0.2)] border border-white/5' : 'bg-white border border-slate-200'}`}>
-            {isPromptGenerated && <div className="absolute top-6 right-6 z-[70] lg:hidden"><Button onClick={() => setIsPromptGenerated(false)} variant="ghost" size="icon" className="rounded-full bg-slate-900/50 text-white"><X className="w-5 h-5" /></Button></div>}
-            
-            <div className={`h-20 flex items-center justify-between px-6 border-b ${isDarkMode ? 'border-white/5' : 'border-slate-200'} shrink-0`}>
-              <h2 className={`font-black flex items-center gap-2 text-[11px] uppercase tracking-[0.3em] ${t.textMuted}`}>
-                <Layout className="w-4 h-4 text-indigo-400" /> {isPromptGenerated ? "Master Prompt" : "Graphic Data"}
-              </h2>
-              {!isPromptGenerated && <div className="text-[10px] font-bold bg-indigo-500/10 text-indigo-400 px-2.5 py-1 rounded-lg border border-indigo-500/20 tracking-wider">LIVE SUMMARY</div>}
+        <aside className={`flex flex-col overflow-y-auto px-[40px] pt-[30px] pb-[60px] lg:px-[80px] lg:pt-8 lg:pb-[100px] no-scrollbar ${isPromptGenerated ? 'flex fixed inset-0 z-[60] lg:relative lg:z-auto' : 'hidden lg:flex'} z-20`}>
+          <Card className={`flex-1 border-0 h-full flex flex-col relative rounded-[48px] overflow-hidden ${isDarkMode ? 'bg-zinc-950/40 shadow-2xl border border-white/10' : 'bg-white shadow-xl border border-slate-200'}`}>
+            {/* --- CINEMATIC BACKGROUND LAYER --- */}
+            <div className="absolute inset-0 z-0">
+              <img 
+                src={eventBackgrounds[form.eventType] || eventBackgrounds.Birthday} 
+                alt="Event Context" 
+                className="w-full h-full object-cover transition-opacity duration-1000 scale-105"
+              />
+              {/* Theme-Aware Feathered Blur Mask */}
+              <div 
+                className={`absolute inset-0 backdrop-blur-[12px] opacity-100 transition-all duration-500`} 
+                style={{ 
+                  maskImage: 'linear-gradient(to bottom, transparent 150px, black 300px)', 
+                  WebkitMaskImage: 'linear-gradient(to bottom, transparent 150px, black 300px)',
+                  background: isDarkMode 
+                    ? 'linear-gradient(to bottom, transparent 20%, rgba(9, 9, 11, 0.4) 40%, rgba(9, 9, 11, 0.95) 100%)'
+                    : 'linear-gradient(to bottom, transparent 20%, rgba(255, 255, 255, 0.4) 40%, rgba(255, 255, 255, 0.9) 100%)'
+                }} 
+              />
+              <div className={`absolute inset-0 bg-gradient-to-b from-transparent via-transparent ${isDarkMode ? 'to-zinc-950/60' : 'to-white/40'}`} />
             </div>
 
-            <div className="flex-1 relative rounded-xl overflow-hidden min-h-[300px]">
-              {isPromptGenerated ? (
-                <div className="h-full animate-in zoom-in-95 fade-in duration-500 flex flex-col">
-                  <Textarea value={generatePrompt()} readOnly className={`flex-1 border-0 rounded-xl p-6 text-xs font-mono leading-relaxed resize-none ${isDarkMode ? 'bg-slate-950/80 text-indigo-100/80' : 'bg-slate-100 text-slate-700'}`} />
-                  <div className="flex gap-4 pt-6"><Button onClick={() => { navigator.clipboard.writeText(generatePrompt()); alert("Prompt Copied!"); }} className="flex-1 bg-indigo-600 h-14 font-black tracking-widest text-white rounded-xl shadow-indigo-600/20"><Copy className="w-4 h-4 mr-2" /> COPY PROMPT</Button></div>
+            {/* --- TOP RIGHT EVENT PILL (FLAT STYLE) --- */}
+            <div className="absolute top-8 right-8 z-20">
+              <div className={`px-5 py-2.5 rounded-2xl flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.2em] transition-all duration-500 shadow-[0_3px_0_0_rgba(0,0,0,0.1)] ${
+                isDarkMode 
+                  ? 'bg-zinc-800 text-zinc-100' 
+                  : 'bg-white text-slate-900 border border-slate-100'
+              }`}>
+                <div className={`${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>
+                  {eventConfigs[form.eventType]?.icon}
                 </div>
-              ) : (
-                <div className="h-full flex flex-col p-1 overflow-y-auto custom-scrollbar">
-                  <div className={`bg-zinc-900/40 backdrop-blur-sm border ${isDarkMode ? 'border-white/5' : 'border-slate-200'} rounded-2xl overflow-hidden`}>
-                    <SummaryItem label="Event Type" value={form.eventType} />
-                    <SummaryItem label="Design Mode" value={form.cardType === "Celebratory" ? "Social Media" : "Official Invitation"} />
-                    {form.showTitle && <SummaryItem label="Headline" value={form.title} highlight />}
-                    {form.showName && (form.eventType === "Wedding" && form.separateNames
-                      ? <SummaryItem label="Couple" value={[form.brideName, form.groomName].filter(Boolean).join(" & ") || "---"} />
-                      : <SummaryItem label={nameLabels[form.eventType]?.name || "Subject"} value={form.primaryName} muted={!form.primaryName} />
-                    )}
-                    <SummaryItem label="Inclusions" value={(form.secondarySubjects || []).join(", ") || "None"} />
-                    {form.cardType === "Invitation" && form.showDate && <SummaryItem label="Date" value={form.date} />}
-                    {form.cardType === "Invitation" && form.showTime && <SummaryItem label="Time" value={form.time} />}
-                    {form.cardType === "Invitation" && form.showVenue && <SummaryItem label="Venue" value={form.venue} />}
-                    {form.cardType === "Invitation" && form.showRsvp && <SummaryItem label="RSVP Link" value={form.rsvpLink} />}
-                    <SummaryItem label="Theme" value={form.theme} isLast />
-                  </div>
+                {form.eventType}
+              </div>
+            </div>
 
-                  {/* Quick Info Box */}
-                  <div className="mt-6 p-4 rounded-xl bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 backdrop-blur-md">
-                    <div className="flex items-start gap-3">
-                      <Sparkles size={18} className="text-indigo-300 mt-0.5 shrink-0" />
-                      <p className="text-[10px] text-indigo-200/80 leading-relaxed font-medium">
-                        All changes are automatically saved. Adjust your settings and hit generate to see your concept.
-                      </p>
+            {isPromptGenerated && (
+              <div className="absolute top-8 right-8 z-[70] lg:hidden">
+                <Button onClick={() => setIsPromptGenerated(false)} variant="ghost" size="icon" className={`rounded-full backdrop-blur-xl border ${isDarkMode ? 'bg-black/40 text-white border-white/10' : 'bg-white/80 text-slate-900 border-slate-200'}`}>
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+            )}
+            
+            <div className="relative z-10 flex-1 flex flex-col overflow-hidden">
+              {/* 200px Cinematic Spacer */}
+              <div className="h-[200px] shrink-0" />
+
+              {/* Glassmorphism Table Container */}
+              <div className="p-[30px] pt-0 flex-1 flex flex-col overflow-hidden relative">
+                <div className={`${isDarkMode ? 'bg-white/[0.03] border-white/10' : 'bg-white/30 border-white/40'} backdrop-blur-3xl border rounded-[40px] overflow-hidden shadow-2xl flex-1 flex flex-col relative`}>
+                  {isPromptGenerated ? (
+                    <div className="h-full animate-in zoom-in-95 fade-in duration-700 flex flex-col p-10">
+                      <div className="flex items-center gap-4 mb-8">
+                        <div className={`p-2.5 rounded-2xl border ${isDarkMode ? 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30' : 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20'}`}>
+                          <Layout className="w-5 h-5" />
+                        </div>
+                        <span className={`text-[11px] font-semibold tracking-[0.4em] uppercase opacity-80 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Prompt Protocol</span>
+                      </div>
+                      <Textarea 
+                        value={generatePrompt()} 
+                        readOnly 
+                        className={`flex-1 border-0 rounded-3xl p-8 text-xs font-mono leading-relaxed resize-none focus:ring-0 no-scrollbar ${isDarkMode ? 'bg-white/5 text-indigo-100/70' : 'bg-white/40 text-slate-700'}`} 
+                      />
+                      <div className="flex gap-4 pt-8">
+                        <Button 
+                          onClick={() => { navigator.clipboard.writeText(generatePrompt()); alert("Prompt Copied!"); }} 
+                          className="flex-1 bg-indigo-600 hover:bg-indigo-500 h-16 rounded-[20px] text-[11px] font-semibold tracking-[0.2em] text-white shadow-2xl shadow-indigo-600/40 transition-all active:scale-[0.98]"
+                        >
+                          <Copy className="w-4 h-4 mr-3" /> COPY PROTOCOL
+                        </Button>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="h-full flex flex-col overflow-hidden relative">
+                      {/* --- ADAPTIVE HEADER --- */}
+                      <div className={`flex items-center justify-between px-8 py-5 border-b shrink-0 transition-colors duration-500 ${
+                        isDarkMode 
+                          ? 'bg-black/40 border-white/5' 
+                          : 'bg-white/60 border-black/5'
+                      }`}>
+                        <span className={`text-[10px] font-semibold tracking-[0.3em] uppercase ${isDarkMode ? 'text-white/90' : 'text-slate-900'}`}>Data</span>
+                        <span className={`text-[10px] font-semibold tracking-[0.3em] uppercase ${isDarkMode ? 'text-white/90' : 'text-slate-900'}`}>Values</span>
+                      </div>
+
+                      {/* --- SCROLLABLE BODY --- */}
+                      <div className="flex-1 overflow-y-auto no-scrollbar animate-in fade-in duration-700">
+                        <div className={`divide-y px-2 ${isDarkMode ? 'divide-white/[0.05]' : 'divide-black/[0.05]'}`}>
+                          <SummaryItem label="Event Type" value={form.eventType} />
+                          <SummaryItem label="Design Mode" value={form.cardType === "Celebratory" ? "Social Media" : "Official Invitation"} />
+                          {form.showTitle && <SummaryItem label="Headline" value={form.title} highlight />}
+                          {form.showName && (form.eventType === "Wedding" && form.separateNames
+                            ? <SummaryItem label="Couple" value={[form.brideName, form.groomName].filter(Boolean).join(" & ") || "---"} />
+                            : <SummaryItem label={nameLabels[form.eventType]?.name || "Subject"} value={form.primaryName} muted={!form.primaryName} />
+                          )}
+                          <SummaryItem label="Inclusions" value={(form.secondarySubjects || []).join(", ") || "None"} />
+                          {form.cardType === "Invitation" && form.showDate && <SummaryItem label="Date" value={form.date} />}
+                          {form.cardType === "Invitation" && form.showTime && <SummaryItem label="Time" value={form.time} />}
+                          {form.cardType === "Invitation" && form.showVenue && <SummaryItem label="Venue" value={form.venue} />}
+                          {form.cardType === "Invitation" && form.showRsvp && <SummaryItem label="RSVP Link" value={form.rsvpLink} />}
+                          <SummaryItem label="Aesthetic" value={form.theme} />
+                        </div>
+                        {/* Buffer for Floating Button */}
+                        <div className="h-[140px] md:h-[160px]" />
+                      </div>
+
+                      {/* --- FLOATING GENERATE ACTION --- */}
+                      <div className={`absolute bottom-0 inset-x-0 p-5 md:p-8 pt-10 bg-gradient-to-t ${isDarkMode ? 'from-zinc-950/80 via-zinc-950/40' : 'from-white/60 via-white/20'} to-transparent flex flex-col items-center pointer-events-none`}>
+                        <Button 
+                          onClick={() => setIsPromptGenerated(true)}
+                          className="w-full max-w-[280px] bg-indigo-600 hover:bg-indigo-500 h-14 md:h-16 rounded-2xl text-[11px] font-semibold tracking-[0.2em] text-white shadow-xl shadow-indigo-600/30 transition-all active:scale-[0.98] pointer-events-auto flex items-center justify-center gap-3"
+                        >
+                          <Zap size={18} /> GENERATE ASSETS
+                        </Button>
+                        <div className={`mt-4 text-[9px] font-semibold tracking-[0.15em] uppercase opacity-60 flex items-center gap-2 ${isDarkMode ? 'text-zinc-400' : 'text-slate-600'}`}>
+                          <Database size={12} /> Total Tokens Required: <span className={isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}>1,240</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           </Card>
         </aside>
@@ -786,7 +869,8 @@ ${form.theme} aesthetic, ultra-detailed, professional event flyer grade, 8k reso
       </div>
 
       <style>{`
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.2); border-radius: 10px; }
         .animate-in { animation: fade-in 0.5s ease-out; }
