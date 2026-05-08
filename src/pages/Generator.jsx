@@ -535,7 +535,7 @@ ${form.theme} aesthetic, ultra-detailed, professional event flyer grade, 8k reso
             </div>
           </aside>
 
-        <section className={`flex flex-col overflow-y-auto px-[40px] pt-[30px] pb-[60px] lg:px-[80px] lg:pt-8 lg:pb-[100px] no-scrollbar relative z-10 ${isPromptGenerated ? 'hidden lg:flex' : 'flex'}`}>
+        <section className={`flex flex-col overflow-y-auto px-[40px] pt-[30px] pb-[60px] lg:pl-[80px] lg:pr-[40px] lg:pt-8 lg:pb-[100px] no-scrollbar relative z-10 ${isPromptGenerated ? 'hidden lg:flex' : 'flex'}`}>
           <div className="space-y-12">
               {tab === "chat" && (
                 <div className="space-y-8 animate-in fade-in duration-500">
@@ -739,7 +739,7 @@ ${form.theme} aesthetic, ultra-detailed, professional event flyer grade, 8k reso
           </div>
         </section>
 
-        <aside className={`flex flex-col overflow-y-auto px-[40px] pt-[30px] pb-[60px] lg:px-[80px] lg:pt-8 lg:pb-[100px] no-scrollbar ${isPromptGenerated ? 'flex fixed inset-0 z-[60] lg:relative lg:z-auto' : 'hidden lg:flex'} z-20`}>
+        <aside className={`flex flex-col overflow-y-auto px-[40px] pt-[30px] pb-[60px] lg:pl-[40px] lg:pr-[80px] lg:pt-8 lg:pb-[100px] no-scrollbar ${isPromptGenerated ? 'flex fixed inset-0 z-[60] lg:relative lg:z-auto' : 'hidden lg:flex'} z-20`}>
           <Card className={`flex-1 border-0 h-full flex flex-col relative rounded-[48px] overflow-hidden ${isDarkMode ? 'bg-zinc-950/40 shadow-2xl border border-white/10' : 'bg-white shadow-xl border border-slate-200'}`}>
             {/* --- CINEMATIC BACKGROUND LAYER --- */}
             <div className="absolute inset-0 z-0">
