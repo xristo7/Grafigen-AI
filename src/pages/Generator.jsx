@@ -161,14 +161,14 @@ export default function FlyerPromptGenerator() {
   };
 
   const t = {
-    bg: isDarkMode ? "bg-[#0f172a]" : "bg-slate-50",
-    text: isDarkMode ? "text-slate-100" : "text-slate-900",
-    textMuted: "text-slate-500",
-    card: isDarkMode ? "bg-slate-800/30 border-slate-700/50 shadow-2xl backdrop-blur-2xl" : "bg-white border-slate-200 shadow-xl",
-    input: isDarkMode ? "bg-slate-950/50 border-slate-700/50 text-white focus:ring-indigo-500/50" : "bg-white border-slate-300 text-slate-800 focus:ring-indigo-500/20",
-    buttonPrimary: "bg-indigo-600 hover:bg-indigo-500 text-white font-bold tracking-widest transition-all rounded-xl h-12 md:h-14 px-8",
-    headerIcon: "p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-sm",
-    label: "text-[9px] md:text-[10px] uppercase tracking-[0.1em] text-slate-500 font-bold"
+    bg: isDarkMode ? "bg-[#09090b]" : "bg-slate-50",
+    text: isDarkMode ? "text-zinc-100" : "text-slate-900",
+    textMuted: isDarkMode ? "text-zinc-500" : "text-slate-500",
+    card: isDarkMode ? "bg-zinc-900/20 backdrop-blur-md border border-white/5 shadow-2xl" : "bg-white border-slate-200 shadow-xl",
+    input: isDarkMode ? "bg-zinc-950/60 border border-zinc-800/80 text-white focus:ring-indigo-500/50 shadow-inner" : "bg-white border-slate-300 text-slate-800 focus:ring-indigo-500/20",
+    buttonPrimary: "bg-indigo-600 hover:bg-indigo-500 text-white font-bold tracking-widest transition-all rounded-xl h-12 md:h-14 px-8 shadow-[0_0_20px_-5px_rgba(99,102,241,0.4)]",
+    headerIcon: "p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-sm backdrop-blur-md",
+    label: "text-[10px] uppercase tracking-[0.15em] text-zinc-500 font-black"
   };
 
   const currentPresets = eventConfigs[form.eventType]?.presets || [];
@@ -370,17 +370,30 @@ ${form.theme} aesthetic, ultra-detailed, professional event flyer grade, 8k reso
     </div>
   );
 
-  const SummaryItem = ({ label, value }) => (
-    <div className={`flex justify-between items-center py-2.5 border-b ${isDarkMode ? 'border-indigo-500/10' : 'border-slate-200'}`}>
-      <span className={t.label}>{label}</span>
-      <span className={`text-xs font-medium truncate max-w-[140px] text-right ${t.text}`}>{value || "---"}</span>
+  const SummaryItem = ({ label, value, highlight, muted }) => (
+    <div className={`flex items-center justify-between px-5 py-4 border-b ${isDarkMode ? 'border-white/5' : 'border-slate-200'}`}>
+      <span className="text-xs font-semibold text-zinc-500 tracking-wider uppercase">{label}</span>
+      <span className={`text-sm font-medium text-right ${
+        highlight ? 'text-indigo-400 font-bold' : 
+        muted ? 'text-zinc-600 italic' : 
+        isDarkMode ? 'text-zinc-200' : 'text-slate-800'
+      }`}>
+        {value || "---"}
+      </span>
     </div>
   );
 
   return (
-    <div className={`h-screen flex flex-col transition-colors duration-300 ${t.bg} font-sans overflow-hidden relative`}>
+    <div className={`h-screen flex flex-col transition-colors duration-300 ${t.bg} font-sans overflow-hidden relative selection:bg-indigo-500/30`}>
+      {/* --- BACKGROUND GRADIENT BLOBS --- */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute -top-[10%] -left-[10%] w-[50vw] h-[50vw] rounded-full bg-gradient-to-br from-fuchsia-600 to-pink-500 opacity-[0.1] blur-[120px] mix-blend-screen"></div>
+        <div className="absolute top-[50%] -right-[10%] w-[45vw] h-[45vw] rounded-full bg-gradient-to-tl from-amber-400 to-yellow-600 opacity-[0.08] blur-[120px] mix-blend-screen"></div>
+        <div className="absolute top-[10%] left-[30%] w-[30vw] h-[30vw] rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 opacity-[0.06] blur-[100px] mix-blend-screen"></div>
+      </div>
+
       {/* Mobile Drawer — sits behind, revealed by push */}
-      {isSidebarOpen && <aside className={`fixed left-0 top-0 h-full w-[280px] z-30 lg:hidden ${isDarkMode ? 'bg-slate-950 border-r border-slate-800' : 'bg-white border-r border-slate-200'} p-6 overflow-y-auto custom-scrollbar flex flex-col`}>
+      {isSidebarOpen && <aside className={`fixed left-0 top-0 h-full w-[280px] z-[60] lg:hidden ${isDarkMode ? 'bg-[#09090b]/90 backdrop-blur-2xl border-r border-white/5' : 'bg-white border-r border-slate-200'} p-6 overflow-y-auto custom-scrollbar flex flex-col`}>
         <div className="space-y-8">
           {/* Theme Toggle — Mobile Only */}
           <div className="flex items-center justify-between">
@@ -437,7 +450,7 @@ ${form.theme} aesthetic, ultra-detailed, professional event flyer grade, 8k reso
         {/* Negative space tap target to close drawer */}
         {isSidebarOpen && <div className="absolute inset-0 z-[60] lg:hidden" onClick={() => setIsSidebarOpen(false)} />}
 
-        <header className={`border-b ${isDarkMode ? 'border-slate-800/50 bg-[#0f172a]/80' : 'border-slate-200 bg-white/80'} p-3 md:p-4 z-50 backdrop-blur-md flex justify-between items-center shrink-0`}>
+        <header className={`border-b ${isDarkMode ? 'border-white/5 bg-[#09090b]/40' : 'border-slate-200 bg-white/80'} p-3 md:p-4 z-50 backdrop-blur-xl flex justify-between items-center shrink-0`}>
           <div className="flex items-center gap-2 md:gap-3">
             <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className={`lg:hidden p-1 transition-opacity ${isDarkMode ? 'text-white/80 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}>{isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}</button>
             <div className="w-9 h-9 md:w-11 md:h-11 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg md:rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20"><Sparkles className="text-white w-5 h-5 md:w-6 md:h-6" /></div>
@@ -447,16 +460,16 @@ ${form.theme} aesthetic, ultra-detailed, professional event flyer grade, 8k reso
             </div>
           </div>
           <div className="flex items-center gap-3 md:gap-6">
-            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-500/5 border border-slate-500/10 transition-all">
-              <div className={`w-1.5 h-1.5 rounded-full ${isAutoSaving ? 'bg-amber-500 animate-pulse' : 'bg-green-500'}`} />
-              <span className="text-[9px] font-black tracking-widest text-slate-500 uppercase">
+            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 transition-all">
+              <div className={`w-1.5 h-1.5 rounded-full ${isAutoSaving ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500 animate-pulse'}`} />
+              <span className="text-[9px] font-black tracking-widest text-emerald-400 uppercase">
                 {isAutoSaving ? 'Saving...' : 'Auto-Saved'}
               </span>
             </div>
 
-            <div className={`flex ${isDarkMode ? 'bg-slate-800/50' : 'bg-slate-200'} p-1 rounded-full border ${isDarkMode ? 'border-slate-700' : 'border-slate-300'}`}>
+            <div className={`flex ${isDarkMode ? 'bg-zinc-900/80' : 'bg-slate-200'} p-1 rounded-full border ${isDarkMode ? 'border-white/5' : 'border-slate-300'}`}>
               {["Simple", "Pro"].map(m => (
-                <button key={m} onClick={() => { setGlobalMode(m); setTab(m === "Simple" ? "chat" : "content"); }} className={`px-3 md:px-5 py-1.5 rounded-full text-[10px] md:text-xs font-black transition-all ${globalMode === m ? "bg-indigo-600 text-white shadow-lg" : "text-slate-500"}`}>{m}</button>
+                <button key={m} onClick={() => { setGlobalMode(m); setTab(m === "Simple" ? "chat" : "content"); }} className={`px-3 md:px-5 py-1.5 rounded-full text-[10px] md:text-xs font-black transition-all ${globalMode === m ? "bg-indigo-600 text-white shadow-lg" : "text-zinc-500 hover:text-white"}`}>{m}</button>
               ))}
             </div>
 
@@ -467,7 +480,7 @@ ${form.theme} aesthetic, ultra-detailed, professional event flyer grade, 8k reso
 
         <main className="flex-1 overflow-hidden grid lg:grid-cols-[240px_1fr_1fr] relative">
           {/* Desktop Sidebar */}
-          <aside className="hidden lg:flex flex-col p-6 overflow-y-auto custom-scrollbar">
+          <aside className="hidden lg:flex flex-col w-64 border-r border-white/5 bg-[#09090b]/20 backdrop-blur-2xl p-6 overflow-y-auto custom-scrollbar relative z-10">
             <div className="space-y-10">
               <div className="space-y-3">
                 <p className={`${t.label} px-3`}>Workflow</p>
@@ -483,32 +496,32 @@ ${form.theme} aesthetic, ultra-detailed, professional event flyer grade, 8k reso
               <div className="pt-10 border-t border-slate-800/50 space-y-4">
                 <p className={`${t.label} px-3`}>Event Type</p>
                 {Object.entries(eventConfigs).map(([key, cfg]) => (
-                  <button key={key} onClick={() => handleChange('eventType', key)} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-black transition-all ${form.eventType === key ? "text-indigo-400 bg-indigo-400/10 border border-indigo-500/20" : isDarkMode ? "text-slate-500 hover:text-slate-300 hover:bg-slate-800/30" : "text-slate-500 hover:text-slate-700 hover:bg-slate-200"}`}>
+                  <button key={key} onClick={() => handleChange('eventType', key)} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-black transition-all ${form.eventType === key ? "bg-zinc-800 text-white border border-white/10" : isDarkMode ? "text-zinc-500 hover:text-zinc-200 hover:bg-white/5" : "text-slate-500 hover:text-slate-700 hover:bg-slate-200"}`}>
                     <span className="flex items-center gap-2.5">{cfg.icon}{key.toUpperCase()}</span>
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="mt-auto pt-10 border-t border-slate-800/50">
+            <div className="mt-auto pt-10 border-t border-white/5">
               {localStorage.getItem("user_session") ? (
-                <div className="flex items-center justify-between p-4 rounded-[2rem] bg-indigo-500/5 border border-indigo-500/10 group/user">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center text-lg font-black text-white shadow-xl shadow-indigo-600/20 group-hover/user:scale-110 transition-transform">
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/5 group/user hover:bg-white/10 transition-colors cursor-pointer">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center text-sm font-black shadow-lg">
                       {JSON.parse(localStorage.getItem("user_session")).name.charAt(0)}
                     </div>
-                    <div className="flex flex-col">
-                      <span className={`text-sm font-black tracking-tight ${t.text}`}>{JSON.parse(localStorage.getItem("user_session")).name}</span>
-                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Active Member</span>
+                    <div className="flex flex-col min-w-0">
+                      <span className={`text-xs font-black tracking-tight truncate ${t.text}`}>{JSON.parse(localStorage.getItem("user_session")).name}</span>
+                      <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Active Member</span>
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon" onClick={() => { localStorage.removeItem("user_session"); window.location.reload(); }} className="text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-2xl">
-                    <LogOut className="w-5 h-5" />
+                  <Button variant="ghost" size="icon" onClick={() => { localStorage.removeItem("user_session"); window.location.reload(); }} className="text-zinc-500 hover:text-red-400 hover:bg-red-400/10 rounded-xl">
+                    <LogOut className="w-4 h-4" />
                   </Button>
                 </div>
               ) : (
                 <Link to="/login" className="w-full">
-                  <Button variant="outline" className={`w-full h-14 rounded-2xl text-[10px] font-black tracking-widest ${isDarkMode ? 'border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800' : 'border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50'}`}>LOGIN TO ACCOUNT</Button>
+                  <Button variant="outline" className={`w-full h-12 rounded-xl text-[10px] font-black tracking-widest ${isDarkMode ? 'border-white/10 text-zinc-400 hover:text-white hover:bg-white/5' : 'border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50'}`}>LOGIN TO ACCOUNT</Button>
                 </Link>
               )}
             </div>
@@ -720,15 +733,15 @@ ${form.theme} aesthetic, ultra-detailed, professional event flyer grade, 8k reso
           </Card>
         </section>
 
-        <aside className={`flex flex-col overflow-y-auto p-4 md:p-6 lg:p-8 custom-scrollbar ${isPromptGenerated ? 'flex fixed inset-0 z-[60] lg:relative lg:z-auto' : 'hidden lg:flex'}`}>
-          <Card className={`${t.card} p-[50px] border-0 h-full flex flex-col relative rounded-2xl overflow-hidden`}>
+        <aside className={`flex flex-col overflow-y-auto p-4 md:p-6 lg:p-8 custom-scrollbar ${isPromptGenerated ? 'flex fixed inset-0 z-[60] lg:relative lg:z-auto' : 'hidden lg:flex'} z-20`}>
+          <Card className={`flex-1 border-0 h-full flex flex-col relative rounded-3xl overflow-hidden ${isDarkMode ? 'bg-zinc-950/20 backdrop-blur-2xl shadow-[-10px_0_30px_rgba(0,0,0,0.2)] border border-white/5' : 'bg-white border border-slate-200'}`}>
             {isPromptGenerated && <div className="absolute top-6 right-6 z-[70] lg:hidden"><Button onClick={() => setIsPromptGenerated(false)} variant="ghost" size="icon" className="rounded-full bg-slate-900/50 text-white"><X className="w-5 h-5" /></Button></div>}
             
-            <div className="flex items-center justify-between mb-8 shrink-0 relative z-10">
-              <h2 className="font-black flex items-center gap-2 text-[11px] uppercase tracking-[0.3em] text-slate-500">
+            <div className={`h-20 flex items-center justify-between px-6 border-b ${isDarkMode ? 'border-white/5' : 'border-slate-200'} shrink-0`}>
+              <h2 className={`font-black flex items-center gap-2 text-[11px] uppercase tracking-[0.3em] ${t.textMuted}`}>
                 <Layout className="w-4 h-4 text-indigo-400" /> {isPromptGenerated ? "Master Prompt" : "Graphic Data"}
               </h2>
-              {!isPromptGenerated && <span className="text-[8px] font-black tracking-widest px-3 py-1.5 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">LIVE SUMMARY</span>}
+              {!isPromptGenerated && <div className="text-[10px] font-bold bg-indigo-500/10 text-indigo-400 px-2.5 py-1 rounded-lg border border-indigo-500/20 tracking-wider">LIVE SUMMARY</div>}
             </div>
 
             <div className="flex-1 relative rounded-xl overflow-hidden min-h-[300px]">
@@ -738,20 +751,32 @@ ${form.theme} aesthetic, ultra-detailed, professional event flyer grade, 8k reso
                   <div className="flex gap-4 pt-6"><Button onClick={() => { navigator.clipboard.writeText(generatePrompt()); alert("Prompt Copied!"); }} className="flex-1 bg-indigo-600 h-14 font-black tracking-widest text-white rounded-xl shadow-indigo-600/20"><Copy className="w-4 h-4 mr-2" /> COPY PROMPT</Button></div>
                 </div>
               ) : (
-                <div className="h-full flex flex-col space-y-2 p-1 overflow-y-auto custom-scrollbar">
-                  <SummaryItem label="Event Type" value={form.eventType} />
-                  <SummaryItem label="Design Mode" value={form.cardType === "Celebratory" ? "Social Media" : "Official Invitation"} />
-                  {form.showTitle && <SummaryItem label="Headline" value={form.title} />}
-                  {form.showName && (form.eventType === "Wedding" && form.separateNames
-                    ? <SummaryItem label="Couple" value={[form.brideName, form.groomName].filter(Boolean).join(" & ") || "---"} />
-                    : <SummaryItem label={nameLabels[form.eventType]?.name || "Subject"} value={form.primaryName} />
-                  )}
-                  <SummaryItem label="Inclusions" value={(form.secondarySubjects || []).join(", ") || "None"} />
-                  {form.cardType === "Invitation" && form.showDate && <SummaryItem label="Date" value={form.date} />}
-                  {form.cardType === "Invitation" && form.showTime && <SummaryItem label="Time" value={form.time} />}
-                  {form.cardType === "Invitation" && form.showVenue && <SummaryItem label="Venue" value={form.venue} />}
-                  {form.cardType === "Invitation" && form.showRsvp && <SummaryItem label="RSVP Link" value={form.rsvpLink} />}
-                  <SummaryItem label="Theme" value={form.theme} />
+                <div className="h-full flex flex-col p-1 overflow-y-auto custom-scrollbar">
+                  <div className={`bg-zinc-900/40 backdrop-blur-sm border ${isDarkMode ? 'border-white/5' : 'border-slate-200'} rounded-2xl overflow-hidden`}>
+                    <SummaryItem label="Event Type" value={form.eventType} />
+                    <SummaryItem label="Design Mode" value={form.cardType === "Celebratory" ? "Social Media" : "Official Invitation"} />
+                    {form.showTitle && <SummaryItem label="Headline" value={form.title} highlight />}
+                    {form.showName && (form.eventType === "Wedding" && form.separateNames
+                      ? <SummaryItem label="Couple" value={[form.brideName, form.groomName].filter(Boolean).join(" & ") || "---"} />
+                      : <SummaryItem label={nameLabels[form.eventType]?.name || "Subject"} value={form.primaryName} muted={!form.primaryName} />
+                    )}
+                    <SummaryItem label="Inclusions" value={(form.secondarySubjects || []).join(", ") || "None"} />
+                    {form.cardType === "Invitation" && form.showDate && <SummaryItem label="Date" value={form.date} />}
+                    {form.cardType === "Invitation" && form.showTime && <SummaryItem label="Time" value={form.time} />}
+                    {form.cardType === "Invitation" && form.showVenue && <SummaryItem label="Venue" value={form.venue} />}
+                    {form.cardType === "Invitation" && form.showRsvp && <SummaryItem label="RSVP Link" value={form.rsvpLink} />}
+                    <SummaryItem label="Theme" value={form.theme} isLast />
+                  </div>
+
+                  {/* Quick Info Box */}
+                  <div className="mt-6 p-4 rounded-xl bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 backdrop-blur-md">
+                    <div className="flex items-start gap-3">
+                      <Sparkles size={18} className="text-indigo-300 mt-0.5 shrink-0" />
+                      <p className="text-[10px] text-indigo-200/80 leading-relaxed font-medium">
+                        All changes are automatically saved. Adjust your settings and hit generate to see your concept.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
