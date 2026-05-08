@@ -65,6 +65,7 @@ export default function FlyerPromptGenerator() {
   const [hasOptimized, setHasOptimized] = useState(false);
   const [isPromptGenerated, setIsPromptGenerated] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
 
   const [form, setForm] = useState({
     eventType: "Birthday",
@@ -100,6 +101,34 @@ export default function FlyerPromptGenerator() {
     primaryNameSize: "Large",
     primaryNamePosition: "Center"
   });
+
+  // Load Progress on Mount
+  useEffect(() => {
+    const savedProgress = localStorage.getItem("grafigen_user_progress");
+    if (savedProgress) {
+      try {
+        const { form: savedForm, isDarkMode: savedTheme, globalMode: savedMode } = JSON.parse(savedProgress);
+        if (savedForm) setForm(savedForm);
+        if (savedTheme !== undefined) setIsDarkMode(savedTheme);
+        if (savedMode) setGlobalMode(savedMode);
+      } catch (e) {
+        console.error("Failed to load saved progress", e);
+      }
+    }
+  }, []);
+
+  // Auto-Save on State Change
+  useEffect(() => {
+    const saveProgress = () => {
+      setIsAutoSaving(true);
+      const progress = { form, isDarkMode, globalMode };
+      localStorage.setItem("grafigen_user_progress", JSON.stringify(progress));
+      setTimeout(() => setIsAutoSaving(false), 800);
+    };
+
+    const timer = setTimeout(saveProgress, 500); // Debounce save
+    return () => clearTimeout(timer);
+  }, [form, isDarkMode, globalMode]);
 
   // Context-aware labels based on event type
   const nameLabels = {
@@ -382,6 +411,13 @@ ${form.theme} aesthetic, ultra-detailed, professional event flyer grade, 8k reso
             </div>
           </div>
           <div className="flex items-center gap-3 md:gap-6">
+            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-500/5 border border-slate-500/10 transition-all">
+              <div className={`w-1.5 h-1.5 rounded-full ${isAutoSaving ? 'bg-amber-500 animate-pulse' : 'bg-green-500'}`} />
+              <span className="text-[9px] font-black tracking-widest text-slate-500 uppercase">
+                {isAutoSaving ? 'Saving...' : 'Auto-Saved'}
+              </span>
+            </div>
+
             <div className={`flex ${isDarkMode ? 'bg-slate-800/50' : 'bg-slate-200'} p-1 rounded-full border ${isDarkMode ? 'border-slate-700' : 'border-slate-300'}`}>
               {["Simple", "Pro"].map(m => (
                 <button key={m} onClick={() => { setGlobalMode(m); setTab(m === "Simple" ? "chat" : "content"); }} className={`px-3 md:px-5 py-1.5 rounded-full text-[10px] md:text-xs font-black transition-all ${globalMode === m ? "bg-indigo-600 text-white shadow-lg" : "text-slate-500"}`}>{m}</button>
