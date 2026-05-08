@@ -44,6 +44,7 @@ import {
   ArrowRight,
   Gem,
   ChevronDown,
+  LogOut,
   Menu
 } from "lucide-react";
 
