@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Users as UsersIcon, 
   Search, 
@@ -14,16 +14,29 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 
-const mockUsers = [
-  { id: 1, name: "Administrator", email: "admin@grafigen.studio", role: "Super Admin", status: "Active", joined: "May 01, 2026" },
-  { id: 2, name: "John Doe", email: "john@example.com", role: "Editor", status: "Active", joined: "May 03, 2026" },
-  { id: 3, name: "Sarah Smith", email: "sarah@design.co", role: "Viewer", status: "Inactive", joined: "May 04, 2026" },
-  { id: 4, name: "Michael Chen", email: "m.chen@studio.io", role: "Editor", status: "Active", joined: "May 05, 2026" },
-  { id: 5, name: "Elena Rodriguez", email: "elena@agency.com", role: "Viewer", status: "Active", joined: "May 06, 2026" },
-];
-
 export default function Users() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    fetch('/api/auth')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setUsers(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Failed to fetch users", err);
+        setLoading(false);
+      });
+  }, []);
+
+  const filteredUsers = users.filter(user => 
+    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.role.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -67,7 +80,15 @@ export default function Users() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/50">
-              {mockUsers.map((user) => (
+              {loading ? (
+                <tr>
+                  <td colSpan="5" className="px-6 py-12 text-center text-slate-500 font-bold uppercase tracking-widest animate-pulse">Initializing Data Stream...</td>
+                </tr>
+              ) : filteredUsers.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="px-6 py-12 text-center text-slate-500 font-bold uppercase tracking-widest">No matching entities found in core.</td>
+                </tr>
+              ) : filteredUsers.map((user) => (
                 <tr key={user.id} className="hover:bg-slate-800/30 transition-colors group">
                   <td className="px-6 py-5">
                     <div className="flex items-center gap-4">
@@ -82,24 +103,22 @@ export default function Users() {
                   </td>
                   <td className="px-6 py-5">
                     <div className="flex items-center gap-2">
-                      <Shield className={`w-3 h-3 ${user.role === 'Super Admin' ? 'text-indigo-400' : 'text-slate-500'}`} />
-                      <span className="text-xs font-bold text-slate-300">{user.role}</span>
+                      <Shield className={`w-3 h-3 ${user.role === 'admin' ? 'text-indigo-400' : 'text-slate-500'}`} />
+                      <span className="text-xs font-bold text-slate-300 capitalize">{user.role}</span>
                     </div>
                   </td>
                   <td className="px-6 py-5">
                     <div className="flex items-center gap-2">
-                      {user.status === 'Active' ? (
-                        <CheckCircle2 className="w-3 h-3 text-green-500" />
-                      ) : (
-                        <XCircle className="w-3 h-3 text-red-500" />
-                      )}
-                      <span className={`text-[10px] font-black tracking-widest uppercase ${user.status === 'Active' ? 'text-green-400' : 'text-red-400'}`}>
-                        {user.status}
+                      <CheckCircle2 className="w-3 h-3 text-green-500" />
+                      <span className={`text-[10px] font-black tracking-widest uppercase text-green-400`}>
+                        Active
                       </span>
                     </div>
                   </td>
                   <td className="px-6 py-5">
-                    <span className="text-xs font-medium text-slate-500">{user.joined}</span>
+                    <span className="text-xs font-medium text-slate-500">
+                      {new Date(user.last_login).toLocaleDateString(undefined, { month: 'short', day: '2-digit', year: 'numeric' })}
+                    </span>
                   </td>
                   <td className="px-6 py-5 text-right">
                     <button className="p-2 rounded-lg hover:bg-slate-700 text-slate-500 hover:text-white transition-all">
@@ -112,7 +131,7 @@ export default function Users() {
           </table>
         </div>
         <div className="px-6 py-4 bg-slate-950/30 border-t border-slate-800 flex items-center justify-between">
-          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Showing 5 of 1,284 Entities</p>
+          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Showing {filteredUsers.length} of {users.length} Entities</p>
           <div className="flex gap-2">
             <Button variant="ghost" disabled className="h-8 px-3 text-[10px] font-black text-slate-500 rounded-lg">PREV</Button>
             <Button variant="ghost" className="h-8 px-3 text-[10px] font-black text-indigo-400 hover:text-indigo-300 rounded-lg">NEXT</Button>
